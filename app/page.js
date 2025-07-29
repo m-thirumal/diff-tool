@@ -5,12 +5,41 @@ import { useState } from "react";
 export default function Home() {
   const dbTypes = ['PostgreSQL', 'MySQL'];
   const [dbType, setDbType] = useState('PostgreSQL');
-  const [envA, setEnvA] = useState({ host: "", port: "", user: "", password: "", db: "" });
-  const [envB, setEnvB] = useState({ host: "", port: "", user: "", password: "", db: "" });
+  const [envA, setEnvA] = useState({ host: "", port: "3306", user: "", password: "", db: "" });
+  const [envB, setEnvB] = useState({ host: "", port: "3306", user: "", password: "", db: "" });
 
   const handleEnvChange = (setEnv, field, value) => {
     setEnv((prev) => ({ ...prev, [field]: value }));
   };
+
+  const handleGetTables = async () => {
+  try {
+    const res = await fetch("/api/get-tables", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        dbType,
+        host: envA.host,
+        port: envA.port,
+        db: envA.db,
+        user: envA.user,
+        password: envA.password,
+      }),
+    });
+
+    const data = await res.json();
+
+    if (res.ok) {
+      console.log("Tables:", data.tables);
+      // Save to state if needed: setTables(data.tables);
+    } else {
+      alert("Error: " + data.error);
+    }
+  } catch (err) {
+    console.error("Connection failed", err);
+  }
+};
+
 
   return (
    <div className="p-8 font-sans">
@@ -24,13 +53,13 @@ export default function Home() {
         </select>
       </div>
       <hr />
-      <div className="flex flex-col md:flex-row gap-12">
-        <div style={{ flex: 1 }}>
-          <h2 className="text-xl font-semibold mb-4">Environment A</h2>
+      <div className="flex flex-col md:flex-row gap-2">
+        <div  className="p-4 flex-1">
+          <h2 className="text-lg font-semibold mb-4">Environment A</h2>
           {renderEnvInputs(envA, setEnvA, "envA")}
         </div>
-        <div style={{ flex: 1 }}>
-          <h2 className="text-xl font-semibold mb-4">Environment B</h2>
+        <div  className="p-4 flex-1">
+          <h2 className="text-lg font-semibold mb-4">Environment B</h2>
           {renderEnvInputs(envB, setEnvB, "envB")}
         </div>
       </div>
@@ -41,9 +70,10 @@ export default function Home() {
             console.log("Selected DB Type:", dbType);
             console.log("Env A:", envA);
             console.log("Env B:", envB);
+            handleGetTables();
           }}
         >
-          Continue to Compare
+          Display Tables
         </button>
       </div>
    </div>
@@ -80,3 +110,4 @@ function renderEnvInputs(env, setEnv, prefix) {
     </div>
   ));
 }
+
