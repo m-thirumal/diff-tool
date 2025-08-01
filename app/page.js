@@ -1,44 +1,31 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
+import { useDb } from "./context/DbContext";
+
 
 export default function Home() {
+  const router = useRouter();
+  const { setDbDetails } = useDb();
   const dbTypes = ['PostgreSQL', 'MySQL'];
   const [dbType, setDbType] = useState('PostgreSQL');
-  const [envA, setEnvA] = useState({ host: "", port: "3306", user: "", password: "", db: "" });
-  const [envB, setEnvB] = useState({ host: "", port: "3306", user: "", password: "", db: "" });
+  const [envA, setEnvA] = useState({ host: "10.100.112.14", port: "3306", user: "NESL_SANDBOX", password: "$ecureSandbox@123", db: "nesl_properties" });
+  const [envB, setEnvB] = useState({ host: "10.100.112.14", port: "3306", user: "NESL_SANDBOX", password: "$ecureSandbox@123", db: "nesl_properties" });
 
   const handleEnvChange = (setEnv, field, value) => {
     setEnv((prev) => ({ ...prev, [field]: value }));
   };
 
   const handleGetTables = async () => {
-  try {
-    const res = await fetch("/api/get-tables", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        dbType,
-        host: envA.host,
-        port: envA.port,
-        db: envA.db,
-        user: envA.user,
-        password: envA.password,
-      }),
-    });
-
-    const data = await res.json();
-
-    if (res.ok) {
-      console.log("Tables:", data.tables);
-      // Save to state if needed: setTables(data.tables);
-    } else {
-      alert("Error: " + data.error);
-    }
-  } catch (err) {
-    console.error("Connection failed", err);
-  }
-};
+    const payload = {
+      dbType,
+      envA,
+      envB,
+    };
+    setDbDetails(payload); // Store in context
+    router.push(`/diff-db`);
+  };
 
 
   return (
