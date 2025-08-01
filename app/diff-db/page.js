@@ -1,11 +1,10 @@
 "use client";
 import { useEffect, useState } from "react";
 import { useDb } from "../context/DbContext";
-import { useSearchParams } from "next/navigation";
 
 export default function SelectTablePage() {
-  const { dbDetails } = useDb();
-  const { dbType, envA, envB } = dbDetails;
+  const { payload } = useDb();
+  const { dbType, envA, envB } = payload;
   const [tables, setTables] = useState([]);
   const [selectedTable, setSelectedTable] = useState("");
   const [loading, setLoading] = useState(true);

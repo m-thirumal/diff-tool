@@ -2,19 +2,33 @@
 
 import { createContext, useContext, useState } from "react";
 
+const defaultPayload = {
+  dbType: "PostgreSQL", //MySQL
+  envA: {
+    host: "",
+    port: "3306",
+    db: "",
+    user: "",
+    password: "",
+  },
+  envB: {
+    host: "",
+    port: "3306",
+    db: "",
+    user: "",
+    password: "",
+  },
+};
+
 // 1. Create context
 const DbContext = createContext();
 
 // 2. Provider component
 export const DbProvider = ({ children }) => {
-  const [dbDetails, setDbDetails] = useState({
-    dbType: "",
-    envA: {},
-    envB: {},
-  });
+  const [payload, setPayload] = useState(defaultPayload);
 
   return (
-    <DbContext.Provider value={{ dbDetails, setDbDetails }}>
+    <DbContext.Provider value={{ payload, setPayload }}>
       {children}
     </DbContext.Provider>
   );

@@ -1,17 +1,17 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useDb } from "./context/DbContext";
 
 
 export default function Home() {
   const router = useRouter();
-  const { setDbDetails } = useDb();
-  const dbTypes = ['PostgreSQL', 'MySQL'];
-  const [dbType, setDbType] = useState('PostgreSQL');
-  const [envA, setEnvA] = useState({ host: "10.100.112.14", port: "3306", user: "NESL_SANDBOX", password: "$ecureSandbox@123", db: "nesl_properties" });
-  const [envB, setEnvB] = useState({ host: "10.100.112.14", port: "3306", user: "NESL_SANDBOX", password: "$ecureSandbox@123", db: "nesl_properties" });
+  const { payload, setPayload } = useDb();
+  const [dbType, setDbType] = useState(payload.dbType);
+  const [envA, setEnvA] = useState(payload.envA);
+  const [envB, setEnvB] = useState(payload.envB);
+  const dbTypes = ["MySQL", "PostgreSQL"];
 
   const handleEnvChange = (setEnv, field, value) => {
     setEnv((prev) => ({ ...prev, [field]: value }));
@@ -23,9 +23,14 @@ export default function Home() {
       envA,
       envB,
     };
-    setDbDetails(payload); // Store in context
+    setPayload(payload); // Store in context
     router.push(`/diff-db`);
   };
+
+  //Keep context live-updated
+  useEffect(() => {
+     setPayload({ dbType, envA, envB });
+  }, [dbType, envA, envB]);
 
 
   return (
