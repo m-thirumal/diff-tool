@@ -12,6 +12,9 @@ export default function SelectTablePage() {
   const [columns, setColumns] = useState([]);
   const [selectedColumn, setSelectedColumn] = useState("");
   const [loadingCols, setLoadingCols] = useState(false);
+  // Row
+  const [rowDiff, setRowDiff] = useState(null);
+  const [diffLoading, setDiffLoading] = useState(false);
 
   useEffect(() => {
     async function fetchCommonTables() {
@@ -78,6 +81,30 @@ export default function SelectTablePage() {
     }
     fetchColumns();
   }, [selectedTable]);
+
+  useEffect(() => {
+    if (!selectedColumn || !selectedTable) return;
+
+    async function fetchDiffs() {
+        setDiffLoading(true);
+        try {
+          const res = await fetch("/api/get-row-diff", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ dbType, envA, envB, table: selectedTable, keyColumn: selectedColumn }),
+          });
+
+          const data = await res.json();
+          setRowDiff(data);
+        } catch (err) {
+          console.error("Error fetching diff:", err);
+        } finally {
+          setDiffLoading(false);
+        }
+      }
+
+      fetchDiffs();
+    }, [selectedColumn]);
 
   return (
     <div className="p-8">
