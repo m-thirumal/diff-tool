@@ -4,7 +4,6 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useDb } from "./context/DbContext";
 
-
 export default function Home() {
   const router = useRouter();
   const { payload, setPayload } = useDb();
