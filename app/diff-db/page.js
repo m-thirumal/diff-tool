@@ -103,8 +103,8 @@ export default function SelectTablePage() {
           const dataA = await resA.json();
           const dataB = await resB.json();
           
-          const rowsA = dataA.rows || [];
-          const rowsB = dataB.rows || [];
+          const rowsA = dataA.data || [];
+          const rowsB = dataB.data || [];
 
           // Create a map of rows by selectedColumn
           const mapA = new Map(rowsA.map(row => [row[selectedColumn], row]));
