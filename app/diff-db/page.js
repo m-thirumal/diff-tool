@@ -170,7 +170,7 @@ return (
             <label htmlFor="tableSelect" className="font-medium mr-2">Table:</label>
             <select
               id="tableSelect"
-              className="border px-2 py-1 rounded"
+              className="border px-2 py-1 rounded bg-white text-black dark:bg-gray-800 dark:text-white dark:border-gray-600"
               value={selectedTable}
               onChange={(e) => setSelectedTable(e.target.value)}
             >
@@ -215,25 +215,25 @@ return (
         ) : rowDiff.length === 0 ? (
           <p className="text-green-600">No differences found.</p>
         ) : (
-          <div className="overflow-x-auto mt-6">
-            <table className="min-w-full border border-gray-300">
-              <thead className="bg-gray-100">
+          <div className="mt-6 max-w-full overflow-auto">
+            <table className="min-w-full border border-gray-300 table-fixed">
+              <thead className="bg-indigo-600 text-white">
                 <tr>
-                  <th className="px-4 py-2 border">Type</th>
-                  <th className="px-4 py-2 border">Key ({selectedColumns[0] || "—"})</th>
-                  <th className="px-4 py-2 border">New Row</th>
-                  <th className="px-4 py-2 border">Old Row</th>
+                  <th className="px-4 py-2 border w-24">Type</th>
+                  <th className="px-4 py-2 border w-48">Key ({selectedColumns[0] || "—"})</th>
+                  <th className="px-4 py-2 border w-1/2">New Row</th>
+                  <th className="px-4 py-2 border w-1/2">Old Row</th>
                 </tr>
               </thead>
               <tbody>
                 {rowDiff.map((diff, index) => (
                   <tr key={index} className="border-t">
-                    <td className="px-4 py-2 border text-sm text-blue-700">{diff.type}</td>
-                    <td className="px-4 py-2 border text-sm">{diff.key}</td>
-                    <td className="px-4 py-2 border text-xs whitespace-pre-wrap font-mono text-green-700">
+                    <td className="px-4 py-2 border text-xs break-words whitespace-pre-wrap">{diff.type}</td>
+                    <td className="px-4 py-2 border text-xs break-words whitespace-pre-wrap">{diff.key}</td>
+                    <td className="px-4 py-2 border text-xs break-all whitespace-pre-wrap font-mono text-green-700">
                       {JSON.stringify(diff.row, null, 2)}
                     </td>
-                    <td className="px-4 py-2 border text-xs whitespace-pre-wrap font-mono text-red-700">
+                    <td className="px-4 py-2 border text-xs break-words whitespace-pre-wrap font-mono text-red-700">
                       {diff.oldRow ? JSON.stringify(diff.oldRow, null, 2) : "—"}
                     </td>
                   </tr>

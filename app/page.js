@@ -37,7 +37,7 @@ export default function Home() {
       <center><h1 className="text-2xl font-bold mb-6">Database Comparison Tool</h1></center>
       <div className="mb-8">
         <label className="font-medium" htmlFor="dbType">Select Database Type:</label>
-        <select className="ml-4 border border-gray-300 rounded px-2 py-1" value={dbType} onChange={e => setDbType(e.target.value)}>
+        <select className="ml-4 border border-gray-300 rounded px-2 py-1 bg-white text-black dark:bg-gray-800 dark:text-white dark:border-gray-600" value={dbType} onChange={e => setDbType(e.target.value)}>
           {dbTypes.map(type => (
             <option key={type}>{type}</option>
           ))}
