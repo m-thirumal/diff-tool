@@ -1,6 +1,7 @@
 "use client";
 import { useEffect, useState } from "react";
 import { useDb } from "../context/DbContext";
+import MultiSelectDropdown from "../components/MultiSelectDropdown";
 
 export default function SelectTablePage() {
   const { payload } = useDb();
@@ -164,7 +165,7 @@ return (
       <p className="text-red-500">No common tables found.</p>
     ) : (
       <>
-        <div className="mb-4 flex items-center gap-6">
+        <div className="mb-4 flex items-center gap-6 sticky top-0 z-10 bg-white dark:bg-gray-900 py-4">
           {/* Table Dropdown */}
           <div>
             <label htmlFor="tableSelect" className="font-medium mr-2">Table:</label>
@@ -181,32 +182,23 @@ return (
           </div>
 
           {/* Column Dropdown */}
-          <div>
-            <label htmlFor="columnSelect" className="font-medium mr-2">Column:</label>
+          <div className="flex items-center gap-2">
+            <label htmlFor="columnSelect" className="font-medium">
+              Column:
+            </label>
             {loadingCols ? (
               <span>Loading...</span>
             ) : columns.length === 0 ? (
               <span className="text-red-500">No common columns</span>
             ) : (
-             <select
-                id="columnSelect"
-                className="border px-2 py-1 rounded"
-                multiple
-                size={Math.min(columns.length, 5)}
-                value={selectedColumns}
-                onChange={(e) =>
-                  setSelectedColumns(
-                    Array.from(e.target.selectedOptions, (option) => option.value)
-                  )
-                }
-              >
-  {columns.map((col) => (
-    <option key={col} value={col}>{col}</option>
-  ))}
-</select>
-
+              <MultiSelectDropdown
+                options={columns}
+                selectedValues={selectedColumns}
+                onChange={setSelectedColumns}
+              />
             )}
           </div>
+
         </div>
 
         {/* Diff column */}
@@ -216,7 +208,7 @@ return (
           <p className="text-green-600">No differences found.</p>
         ) : (
           <div className="mt-6 max-w-full overflow-auto">
-            <table className="min-w-full border border-gray-300 table-fixed">
+            <table className="min-w-full border border-gray-300 table-fixed ">
               <thead className="bg-indigo-600 text-white">
                 <tr>
                   <th className="px-4 py-2 border w-24">Type</th>
