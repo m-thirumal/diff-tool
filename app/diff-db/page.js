@@ -10,7 +10,7 @@ export default function SelectTablePage() {
   const [loading, setLoading] = useState(true);
   // Column
   const [columns, setColumns] = useState([]);
-  const [selectedColumn, setSelectedColumn] = useState("");
+  const [selectedColumns, setSelectedColumns] = useState([]);
   const [loadingCols, setLoadingCols] = useState(false);
   // Row
   const [rowDiff, setRowDiff] = useState([]);
@@ -72,7 +72,7 @@ export default function SelectTablePage() {
 
         const commonColumns = dataA.columns.filter((t) => dataB.columns.includes(t));
         setColumns(commonColumns);
-        if (commonColumns.length) setSelectedColumn(commonColumns[0]);
+        if (commonColumns.length) setSelectedColumns([commonColumns[0]]);
       } catch (error) {
         console.error("Error fetching columns:", error);
       } finally {
@@ -83,9 +83,9 @@ export default function SelectTablePage() {
   }, [selectedTable]);
 
   useEffect(() => {
-    if (!selectedColumn || !selectedTable) return;
+     if (!selectedTable || selectedColumns.length === 0) return;
 
-    async function fetchDiffs() {
+     async function fetchDiffs() {
         setDiffLoading(true);
         try {
           const resA = await fetch("/api/get-row-diff", {
@@ -107,26 +107,41 @@ export default function SelectTablePage() {
           const rowsB = dataB.data || [];
 
           // Create a map of rows by selectedColumn
-          const mapA = new Map(rowsA.map(row => [row[selectedColumn], row]));
-          const mapB = new Map(rowsB.map(row => [row[selectedColumn], row]));
+          const key = selectedColumns[0]; // Using the first selected column as primary key
+          const mapA = new Map(rowsA.map(row => [row[key], row]));
+          const mapB = new Map(rowsB.map(row => [row[key], row]));
 
           const diffs = [];
 
-          // Check for inserts (in A not in B)
-          for (const [key, rowA] of mapA.entries()) {
-            if (!mapB.has(key)) {
-              diffs.push({ type: "INSERT into B", key, row: rowA });
-            } else if (JSON.stringify(rowA) !== JSON.stringify(mapB.get(key))) {
-              diffs.push({ type: "UPDATE in B", key, row: rowA, oldRow: mapB.get(key) });
+          for (const [keyValue, rowA] of mapA.entries()) {
+            const rowB = mapB.get(keyValue);
+            if (!rowB) {
+              diffs.push({ type: "INSERT into B", key: keyValue, row: rowA });
+            } else {
+              const diffObjA = {};
+              const diffObjB = {};
+              let hasDiff = false;
+
+              selectedColumns.forEach((col) => {
+                if (rowA[col] !== rowB[col]) {
+                  diffObjA[col] = rowA[col];
+                  diffObjB[col] = rowB[col];
+                  hasDiff = true;
+                }
+              });
+
+              if (hasDiff) {
+                diffs.push({ type: "UPDATE in B", key: keyValue, row: diffObjA, oldRow: diffObjB });
+              }
             }
           }
 
-          // Check for inserts (in B not in A)
-          for (const [key, rowB] of mapB.entries()) {
-            if (!mapA.has(key)) {
-              diffs.push({ type: "INSERT into A", key, row: rowB });
+          for (const [keyValue, rowB] of mapB.entries()) {
+            if (!mapA.has(keyValue)) {
+              diffs.push({ type: "INSERT into A", key: keyValue, row: rowB });
             }
           }
+
           console.log("Diffs:", diffs);
           setRowDiff(diffs);
         } catch (err) {
@@ -137,7 +152,7 @@ export default function SelectTablePage() {
       }
 
       fetchDiffs();
-    }, [selectedColumn]);
+    }, [selectedColumns]);
 
 return (
   <div className="p-8">
@@ -173,16 +188,23 @@ return (
             ) : columns.length === 0 ? (
               <span className="text-red-500">No common columns</span>
             ) : (
-              <select
+             <select
                 id="columnSelect"
                 className="border px-2 py-1 rounded"
-                value={selectedColumn}
-                onChange={(e) => setSelectedColumn(e.target.value)}
+                multiple
+                size={Math.min(columns.length, 5)}
+                value={selectedColumns}
+                onChange={(e) =>
+                  setSelectedColumns(
+                    Array.from(e.target.selectedOptions, (option) => option.value)
+                  )
+                }
               >
-                {columns.map((col) => (
-                  <option key={col} value={col}>{col}</option>
-                ))}
-              </select>
+  {columns.map((col) => (
+    <option key={col} value={col}>{col}</option>
+  ))}
+</select>
+
             )}
           </div>
         </div>
@@ -198,7 +220,7 @@ return (
               <thead className="bg-gray-100">
                 <tr>
                   <th className="px-4 py-2 border">Type</th>
-                  <th className="px-4 py-2 border">Key ({selectedColumn})</th>
+                  <th className="px-4 py-2 border">Key ({selectedColumns[0] || "—"})</th>
                   <th className="px-4 py-2 border">New Row</th>
                   <th className="px-4 py-2 border">Old Row</th>
                 </tr>
