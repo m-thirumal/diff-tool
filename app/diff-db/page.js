@@ -9,6 +9,8 @@ export default function SelectTablePage() {
   const [tables, setTables] = useState([]);
   const [selectedTable, setSelectedTable] = useState("");
   const [loading, setLoading] = useState(true);
+  // Primary Key
+  const [primaryKeys, setPrimaryKeys] = useState([]);
   // Column
   const [columns, setColumns] = useState([]);
   const [selectedColumns, setSelectedColumns] = useState([]);
@@ -73,7 +75,13 @@ export default function SelectTablePage() {
 
         const commonColumns = dataA.columns.filter((t) => dataB.columns.includes(t));
         setColumns(commonColumns);
-        if (commonColumns.length) setSelectedColumns([commonColumns[0]]);
+        // Extract and compare primary keys (optional, if needed)
+        const commonPKs = dataA.primaryKeys.filter(pk => dataB.primaryKeys.includes(pk));
+        setPrimaryKeys(commonPKs); // <-- You need to define setPrimaryKeys via useState
+        
+        if (commonColumns.length) {
+          setSelectedColumns([commonColumns[0]]);
+        }
       } catch (error) {
         console.error("Error fetching columns:", error);
       } finally {
@@ -83,8 +91,12 @@ export default function SelectTablePage() {
     fetchColumns();
   }, [selectedTable]);
 
+  function generateCompositeKey(row, primaryKeys) {
+    return primaryKeys.map(pk => row[pk] ?? '__NULL__').join("||");
+  }
+
   useEffect(() => {
-     if (!selectedTable || selectedColumns.length === 0) return;
+     if (!selectedTable || selectedColumns.length === 0 || primaryKeys.length === 0) return;
 
      async function fetchDiffs() {
         setDiffLoading(true);
@@ -108,16 +120,16 @@ export default function SelectTablePage() {
           const rowsB = dataB.data || [];
 
           // Create a map of rows by selectedColumn
-          const key = selectedColumns[0]; // Using the first selected column as primary key
-          const mapA = new Map(rowsA.map(row => [row[key], row]));
-          const mapB = new Map(rowsB.map(row => [row[key], row]));
+          const mapA = new Map(rowsA.map(row => [generateCompositeKey(row, primaryKeys), row]));
+          const mapB = new Map(rowsB.map(row => [generateCompositeKey(row, primaryKeys), row]));
 
           const diffs = [];
 
           for (const [keyValue, rowA] of mapA.entries()) {
+            const pkValues = Object.fromEntries(primaryKeys.map(pk => [pk, rowA[pk]]));
             const rowB = mapB.get(keyValue);
             if (!rowB) {
-              diffs.push({ type: "INSERT into B", key: keyValue, row: rowA });
+              diffs.push({ type: "INSERT into B", key: keyValue, row: rowA, pkValues });
             } else {
               const diffObjA = {};
               const diffObjB = {};
@@ -132,14 +144,15 @@ export default function SelectTablePage() {
               });
 
               if (hasDiff) {
-                diffs.push({ type: "UPDATE in B", key: keyValue, row: diffObjA, oldRow: diffObjB });
+                diffs.push({ type: "UPDATE in B", key: keyValue, row: diffObjA, oldRow: diffObjB, pkValues  });
               }
             }
           }
 
           for (const [keyValue, rowB] of mapB.entries()) {
             if (!mapA.has(keyValue)) {
-              diffs.push({ type: "INSERT into A", key: keyValue, row: rowB });
+              const pkValues = Object.fromEntries(primaryKeys.map(pk => [pk, rowA[pk]]));
+              diffs.push({ type: "INSERT into A", key: keyValue, row: rowB, pkValues });
             }
           }
 
@@ -153,7 +166,45 @@ export default function SelectTablePage() {
       }
 
       fetchDiffs();
-    }, [selectedColumns]);
+    }, [selectedColumns, selectedTable, primaryKeys]);
+
+  function generateSQL(diff) {
+    if (!diff || !diff.row) return "";
+
+    const newRow = diff.row;
+    const oldRow = diff.oldRow || {};
+
+    if (diff.type.startsWith("INSERT")) {
+      const keys = Object.keys(newRow).join(", ");
+      const values = Object.values(newRow)
+        .map((v) => `'${String(v).replace(/'/g, "''")}'`)
+        .join(", ");
+      return `INSERT INTO ${selectedTable} (${keys}) VALUES (${values});`;
+    }
+
+    if (diff.type.startsWith("UPDATE")) {
+      const setClause = Object.entries(newRow)
+        .map(([k, v]) => `${k}='${String(v).replace(/'/g, "''")}'`)
+        .join(", ");
+
+      const whereClause = diff.pkValues
+        ? Object.entries(diff.pkValues)
+            .map(([pk, val]) => {
+              const safeVal =
+                typeof val === "number"
+                  ? val
+                  : `'${String(val).replace(/'/g, "''")}'`;
+              return `${pk}=${safeVal}`;
+            })
+            .join(" AND ")
+        : "-- Missing PK values";
+
+
+      return `UPDATE ${selectedTable} SET ${setClause} WHERE ${whereClause};`;
+    }
+
+    return "-- Not supported";
+  }
 
 return (
   <div className="p-8">
@@ -212,9 +263,10 @@ return (
               <thead className="bg-indigo-600 text-white">
                 <tr>
                   <th className="px-4 py-2 border w-24">Type</th>
-                  <th className="px-4 py-2 border w-48">Key ({selectedColumns[0] || "—"})</th>
-                  <th className="px-4 py-2 border w-1/2">New Row</th>
-                  <th className="px-4 py-2 border w-1/2">Old Row</th>
+                  <th className="px-4 py-2 border w-48">Key ({primaryKeys})</th>
+                  <th className="px-4 py-2 border w-1/2">Env A</th>
+                  <th className="px-4 py-2 border w-1/2">Env B</th>
+                  <th className="px-4 py-2 border w-1/2">Action (SQL)</th>
                 </tr>
               </thead>
               <tbody>
@@ -227,6 +279,9 @@ return (
                     </td>
                     <td className="px-4 py-2 border text-xs break-words whitespace-pre-wrap font-mono text-red-700">
                       {diff.oldRow ? JSON.stringify(diff.oldRow, null, 2) : "—"}
+                    </td>
+                    <td className="px-2 py-2 border text-xs whitespace-pre-wrap break-words font-mono text-white-800">
+                    {generateSQL(diff)}
                     </td>
                   </tr>
                 ))}
