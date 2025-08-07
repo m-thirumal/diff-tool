@@ -25,34 +25,32 @@ export default function MultiSelectDropdown({ options, selectedValues, onChange 
   };
 
   return (
-    <div className="relative w-64" ref={dropdownRef}>
-      <div
-        className="border px-3 py-2 rounded cursor-pointer bg-white dark:bg-gray-800 dark:border-gray-600"
-        onClick={() => setIsOpen(!isOpen)}
-      >
-        {selectedValues.length > 0
-          ? selectedValues.join(", ")
-          : "Select column(s)"}
-      </div>
-
-      {isOpen && (
-        <div className="absolute mt-1 w-full max-h-60 overflow-auto border rounded bg-white dark:bg-gray-900 dark:border-gray-700 shadow-lg z-10">
-          {options.map((option) => (
-            <label
-              key={option}
-              className="flex items-center px-3 py-2 hover:bg-gray-100 dark:hover:bg-gray-700"
-            >
-              <input
-                type="checkbox"
-                className="mr-2"
-                checked={selectedValues.includes(option)}
-                onChange={() => toggleValue(option)}
-              />
-              {option}
-            </label>
-          ))}
-        </div>
-      )}
+  <div className="relative w-64" ref={dropdownRef}>
+    <div
+      className="border px-3 py-2 rounded cursor-pointer bg-white dark:bg-gray-800 dark:border-gray-600"
+      onClick={() => setIsOpen(!isOpen)}
+    >
+      {selectedValues.length > 0 ? selectedValues.join(", ") : "Select column(s)"}
     </div>
+
+    {isOpen && (
+      <div className="absolute left-0 right-0 z-[999] mt-1 max-h-60 overflow-auto border rounded bg-white dark:bg-gray-900 dark:border-gray-700 shadow-lg">
+        {options.map((option) => (
+          <label
+            key={option}
+            className="flex items-center px-3 py-2 hover:bg-gray-100 dark:hover:bg-gray-700"
+          >
+            <input
+              type="checkbox"
+              className="mr-2"
+              checked={selectedValues.includes(option)}
+              onChange={() => toggleValue(option)}
+            />
+            {option}
+          </label>
+        ))}
+      </div>
+    )}
+  </div>
   );
 }

@@ -148,14 +148,14 @@ export default function SelectTablePage() {
               }
             }
           }
-
+/*
           for (const [keyValue, rowB] of mapB.entries()) {
             if (!mapA.has(keyValue)) {
               const pkValues = Object.fromEntries(primaryKeys.map(pk => [pk, rowB[pk]]));
               diffs.push({ type: "INSERT into A", key: keyValue, row: rowB, pkValues });
             }
           }
-
+*/
           console.log("Diffs:", diffs);
           setRowDiff(diffs);
         } catch (err) {
@@ -253,7 +253,7 @@ return (
           </div>
 
           {/* Column Dropdown */}
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 relative z-20">
             <label htmlFor="columnSelect" className="font-medium">
               Compare Column (Optional):
             </label>
@@ -278,38 +278,54 @@ return (
         ) : rowDiff.length === 0 ? (
           <p className="text-green-600">No differences found.</p>
         ) : (
-          <div className="mt-6 max-w-full overflow-auto">
-            <table className="min-w-full border border-gray-300 table-fixed ">
-              <thead className="bg-indigo-600 text-white">
+          <div className="mt-6 max-w-full overflow-x-auto">
+            <table className="min-w-full border border-gray-300 dark:border-gray-600 table-auto z-10">
+              <thead className="bg-indigo-600 text-white sticky top-0 z-0">
                 <tr>
-                  <th className="px-4 py-2 border w-24">Type</th>
-                  <th className="px-4 py-2 border w-48">Key ({primaryKeys})</th>
-                  <th className="px-4 py-2 border w-1/2">Env A</th>
-                  <th className="px-4 py-2 border w-1/2">Env B</th>
-                  <th className="px-4 py-2 border w-1/2">Action (SQL)</th>
+                  <th className="px-4 py-2 border dark:border-gray-600 min-w-[100px]">Type</th>
+                  <th className="px-4 py-2 border dark:border-gray-600 min-w-[150px]">
+                    Key ({primaryKeys.join(", ")})
+                  </th>
+                  <th className="px-4 py-2 border dark:border-gray-600 min-w-[300px]">Env A</th>
+                  <th className="px-4 py-2 border dark:border-gray-600 min-w-[300px]">Env B</th>
+                  <th className="px-4 py-2 border dark:border-gray-600 min-w-[300px]">Action (SQL)</th>
                 </tr>
               </thead>
-              <tbody>
+              <tbody className="bg-white dark:bg-gray-800 text-black dark:text-gray-100">
                 {rowDiff.map((diff, index) => (
-                  <tr key={index} className="border-t">
-                    <td className="px-4 py-2 border text-xs break-words whitespace-pre-wrap">{diff.type}</td>
-                    <td className="px-4 py-2 border text-xs break-words whitespace-pre-wrap">{diff.key}</td>
-                    <td className="px-4 py-2 border text-xs break-all whitespace-pre-wrap font-mono text-green-700">
-                      {JSON.stringify(diff.row, null, 2)}
+                  <tr key={index} className="border-t dark:border-gray-700">
+                    <td className="px-4 py-2 border dark:border-gray-700 text-xs break-words whitespace-pre-wrap">
+                      {diff.type}
                     </td>
-                    <td className="px-4 py-2 border text-xs break-words whitespace-pre-wrap font-mono text-red-700">
-                      {diff.oldRow ? JSON.stringify(diff.oldRow, null, 2) : "—"}
+                    <td className="px-4 py-2 border dark:border-gray-700 text-xs break-all whitespace-pre-wrap">
+                      {diff.key}
                     </td>
-                    <td className="px-2 py-2 border text-xs whitespace-pre-wrap break-words font-mono text-white-800">
-                    {generateSQL(diff)}
+                    <td className="px-4 py-2 border dark:border-gray-700 text-xs break-all whitespace-pre-wrap font-mono text-green-700 dark:text-green-400">
+                      <pre className="whitespace-pre-wrap break-words">
+                        {JSON.stringify(diff.row, null, 2)}
+                      </pre>
+                    </td>
+                    <td className="px-4 py-2 border dark:border-gray-700 text-xs break-all whitespace-pre-wrap font-mono text-red-700 dark:text-red-400">
+                      <pre className="whitespace-pre-wrap break-words">
+                        {diff.oldRow ? JSON.stringify(diff.oldRow, null, 2) : "—"}
+                      </pre>
+                    </td>
+                    <td className="px-4 py-2 border dark:border-gray-700 text-xs whitespace-pre-wrap break-all font-mono dark:text-indigo-300">
+                      <pre className="whitespace-pre-wrap break-words">
+                        {generateSQL(diff)}
+                      </pre>
                     </td>
                   </tr>
                 ))}
               </tbody>
             </table>
-            <p className="mt-2 text-sm text-gray-600">Total differences: {rowDiff.length}</p>
+            <p className="mt-2 text-sm text-gray-600 dark:text-gray-300">
+              Total differences: {rowDiff.length}
+            </p>
           </div>
+
         )}
+
       </>
     )}
   </div>
