@@ -13,7 +13,9 @@ export default function SelectTablePage() {
   const [primaryKeys, setPrimaryKeys] = useState([]);
   // Column
   const [columns, setColumns] = useState([]);
-  const [selectedKeyColumn, setSelectedKeyColumn] = useState([]);
+  // Key Column
+  const [selectedKeyColumn, setSelectedKeyColumn] = useState("");
+  // Compare Columns
   const [selectedColumns, setSelectedColumns] = useState([]);
   const [loadingCols, setLoadingCols] = useState(false);
   // Row
@@ -81,7 +83,7 @@ export default function SelectTablePage() {
         setPrimaryKeys(commonPKs); // <-- You need to define setPrimaryKeys via useState
         
         if (commonColumns.length) {
-          setSelectedKeyColumn([commonColumns[0]]);
+          setSelectedKeyColumn(commonColumns[0]);
           setSelectedColumns([commonColumns[0]]);
         }
       } catch (error) {
@@ -93,12 +95,8 @@ export default function SelectTablePage() {
     fetchColumns();
   }, [selectedTable]);
 
-  function generateCompositeKey(row, primaryKeys) {
-    return primaryKeys.map(pk => row[pk] ?? '__NULL__').join("||");
-  }
-
   useEffect(() => {
-     if (!selectedTable || selectedColumns.length === 0 || primaryKeys.length === 0) return;
+     if (!selectedTable || selectedColumns.length === 0 || primaryKeys.length === 0 || !selectedKeyColumn) return;
 
      async function fetchDiffs() {
         setDiffLoading(true);
@@ -122,8 +120,8 @@ export default function SelectTablePage() {
           const rowsB = dataB.data || [];
 
           // Create a map of rows by selectedColumn
-          const mapA = new Map(rowsA.map(row => [generateCompositeKey(row, primaryKeys), row]));
-          const mapB = new Map(rowsB.map(row => [generateCompositeKey(row, primaryKeys), row]));
+          const mapA = new Map(rowsA.map(row => [row[selectedKeyColumn], row]));
+          const mapB = new Map(rowsB.map(row => [row[selectedKeyColumn], row]));
 
           const diffs = [];
 
@@ -153,7 +151,7 @@ export default function SelectTablePage() {
 
           for (const [keyValue, rowB] of mapB.entries()) {
             if (!mapA.has(keyValue)) {
-              const pkValues = Object.fromEntries(primaryKeys.map(pk => [pk, rowA[pk]]));
+              const pkValues = Object.fromEntries(primaryKeys.map(pk => [pk, rowB[pk]]));
               diffs.push({ type: "INSERT into A", key: keyValue, row: rowB, pkValues });
             }
           }
@@ -168,7 +166,7 @@ export default function SelectTablePage() {
       }
 
       fetchDiffs();
-    }, [selectedColumns, selectedTable, primaryKeys]);
+    }, [selectedColumns, selectedTable, primaryKeys, selectedKeyColumn]);
 
   function generateSQL(diff) {
     if (!diff || !diff.row) return "";
@@ -241,7 +239,7 @@ return (
            <select
               id="columnKeySelect"
               className="border px-2 py-1 rounded bg-white text-black dark:bg-gray-800 dark:text-white dark:border-gray-600"
-              value={selectedKeyColumn[0] || ""}
+              value={selectedKeyColumn}
               onChange={(e) => setSelectedKeyColumn([e.target.value])}
             >
               <option value="">-- Select Key Column --</option>
