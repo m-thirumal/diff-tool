@@ -81,6 +81,7 @@ export default function SelectTablePage() {
         setPrimaryKeys(commonPKs); // <-- You need to define setPrimaryKeys via useState
         
         if (commonColumns.length) {
+          setSelectedKeyColumn([commonColumns[0]]);
           setSelectedColumns([commonColumns[0]]);
         }
       } catch (error) {
@@ -233,30 +234,30 @@ return (
             </select>
           </div>
 
-          {/* Column Dropdown */}
+          {/* Column Dropdown for key */}
           <div className="flex items-center gap-2">
             <label htmlFor="columnKeySelect" className="font-medium">
-              Column:
-            </label>
-            {loadingCols ? (
-              <span>Loading...</span>
-            ) : columns.length === 0 ? (
-              <span className="text-red-500">No common columns</span>
-            ) : (
-              <select
-                id="columnKeySelect"
-                className="border px-2 py-1 rounded bg-white text-black dark:bg-gray-800 dark:text-white dark:border-gray-600"
-                options={columns}
-                selectedValues={selectedKeyColumn}
-                onChange={setSelectedKeyColumn}
-              />
-            )}
+             Key Column:</label>
+           <select
+              id="columnKeySelect"
+              className="border px-2 py-1 rounded bg-white text-black dark:bg-gray-800 dark:text-white dark:border-gray-600"
+              value={selectedKeyColumn[0] || ""}
+              onChange={(e) => setSelectedKeyColumn([e.target.value])}
+            >
+              <option value="">-- Select Key Column --</option>
+              {columns.map((col) => (
+                <option key={col} value={col}>
+                  {col}
+                </option>
+              ))}
+            </select>
+
           </div>
 
           {/* Column Dropdown */}
           <div className="flex items-center gap-2">
             <label htmlFor="columnSelect" className="font-medium">
-              Column:
+              Compare Column (Optional):
             </label>
             {loadingCols ? (
               <span>Loading...</span>
