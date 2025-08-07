@@ -13,6 +13,7 @@ export default function SelectTablePage() {
   const [primaryKeys, setPrimaryKeys] = useState([]);
   // Column
   const [columns, setColumns] = useState([]);
+  const [selectedKeyColumn, setSelectedKeyColumn] = useState([]);
   const [selectedColumns, setSelectedColumns] = useState([]);
   const [loadingCols, setLoadingCols] = useState(false);
   // Row
@@ -230,6 +231,26 @@ return (
                 <option key={table} value={table}>{table}</option>
               ))}
             </select>
+          </div>
+
+          {/* Column Dropdown */}
+          <div className="flex items-center gap-2">
+            <label htmlFor="columnKeySelect" className="font-medium">
+              Column:
+            </label>
+            {loadingCols ? (
+              <span>Loading...</span>
+            ) : columns.length === 0 ? (
+              <span className="text-red-500">No common columns</span>
+            ) : (
+              <select
+                id="columnKeySelect"
+                className="border px-2 py-1 rounded bg-white text-black dark:bg-gray-800 dark:text-white dark:border-gray-600"
+                options={columns}
+                selectedValues={selectedKeyColumn}
+                onChange={setSelectedKeyColumn}
+              />
+            )}
           </div>
 
           {/* Column Dropdown */}
