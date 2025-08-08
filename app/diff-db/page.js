@@ -104,78 +104,77 @@ export default function SelectTablePage() {
     fetchColumns();
   }, [selectedTable]);
 
-  useEffect(() => {
-     if (!selectedTable || selectedColumns.length === 0 || primaryKeys.length === 0 || !selectedKeyColumn) return;
+  const fetchDiffs = async () => {
+    if (!selectedTable || selectedColumns.length === 0 || primaryKeys.length === 0 || !selectedKeyColumn) return;
+    setDiffLoading(true);
+    try {
+      const resA = await fetch("/api/get-row-diff", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ dbType, ...envA, table: selectedTable }),
+      });
 
-     async function fetchDiffs() {
-        setDiffLoading(true);
-        try {
-          const resA = await fetch("/api/get-row-diff", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ dbType, ...envA, table: selectedTable }),
+      const resB = await fetch("/api/get-row-diff", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ dbType, ...envB, table: selectedTable }),
+      });
+
+      const dataA = await resA.json();
+      const dataB = await resB.json();
+      
+      const rowsA = dataA.data || [];
+      const rowsB = dataB.data || [];
+
+      // Create a map of rows by selectedColumn
+      const mapA = new Map(rowsA.map(row => [row[selectedKeyColumn], row]));
+      const mapB = new Map(rowsB.map(row => [row[selectedKeyColumn], row]));
+
+      const diffs = [];
+
+      for (const [keyValue, rowA] of mapA.entries()) {
+        const pkValues = Object.fromEntries(primaryKeys.map(pk => [pk, rowA[pk]]));
+        const rowB = mapB.get(keyValue);
+        if (!rowB) {
+          diffs.push({ type: "INSERT", key: keyValue, row: rowA, buttonName: "INSERT to B", pkValues });
+        } else {
+          const diffObjA = {};
+          const diffObjB = {};
+          let hasDiff = false;
+
+          selectedColumns.forEach((col) => {
+            if (rowA[col] !== rowB[col]) {
+              diffObjA[col] = rowA[col];
+              diffObjB[col] = rowB[col];
+              hasDiff = true;
+            }
           });
 
-          const resB = await fetch("/api/get-row-diff", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ dbType, ...envB, table: selectedTable }),
-          });
-
-          const dataA = await resA.json();
-          const dataB = await resB.json();
-          
-          const rowsA = dataA.data || [];
-          const rowsB = dataB.data || [];
-
-          // Create a map of rows by selectedColumn
-          const mapA = new Map(rowsA.map(row => [row[selectedKeyColumn], row]));
-          const mapB = new Map(rowsB.map(row => [row[selectedKeyColumn], row]));
-
-          const diffs = [];
-
-          for (const [keyValue, rowA] of mapA.entries()) {
-            const pkValues = Object.fromEntries(primaryKeys.map(pk => [pk, rowA[pk]]));
-            const rowB = mapB.get(keyValue);
-            if (!rowB) {
-              diffs.push({ type: "INSERT", key: keyValue, row: rowA, buttonName: "INSERT to B", pkValues });
-            } else {
-              const diffObjA = {};
-              const diffObjB = {};
-              let hasDiff = false;
-
-              selectedColumns.forEach((col) => {
-                if (rowA[col] !== rowB[col]) {
-                  diffObjA[col] = rowA[col];
-                  diffObjB[col] = rowB[col];
-                  hasDiff = true;
-                }
-              });
-
-              if (hasDiff) {
-                diffs.push({ type: "UPDATE", key: keyValue, row: diffObjA, oldRow: diffObjB, buttonName: "UPDATE to B", pkValues  });
-              }
-            }
+          if (hasDiff) {
+            diffs.push({ type: "UPDATE", key: keyValue, row: diffObjA, oldRow: diffObjB, buttonName: "UPDATE to B", pkValues  });
           }
-/*
-          for (const [keyValue, rowB] of mapB.entries()) {
-            if (!mapA.has(keyValue)) {
-              const pkValues = Object.fromEntries(primaryKeys.map(pk => [pk, rowB[pk]]));
-              diffs.push({ type: "INSERT into A", key: keyValue, row: rowB, pkValues });
-            }
-          }
-*/
-          console.log("Diffs:", diffs);
-          setRowDiff(diffs);
-        } catch (err) {
-          console.error("Error fetching diff:", err);
-        } finally {
-          setDiffLoading(false);
         }
       }
+/*
+      for (const [keyValue, rowB] of mapB.entries()) {
+        if (!mapA.has(keyValue)) {
+          const pkValues = Object.fromEntries(primaryKeys.map(pk => [pk, rowB[pk]]));
+          diffs.push({ type: "INSERT into A", key: keyValue, row: rowB, pkValues });
+        }
+      }
+*/
+      console.log("Diffs:", diffs);
+      setRowDiff(diffs);
+    } catch (err) {
+      console.error("Error fetching diff:", err);
+    } finally {
+      setDiffLoading(false);
+    }
+  }
 
-      fetchDiffs();
-    }, [selectedColumns, selectedTable, primaryKeys, selectedKeyColumn]);
+  useEffect(() => {
+    fetchDiffs();
+  }, [selectedColumns, selectedTable, primaryKeys, selectedKeyColumn]);
 
   function generateSQL(diff) {
     if (!diff || !diff.row) return "";
@@ -230,6 +229,8 @@ export default function SelectTablePage() {
         if (res.ok) {
           console.log("Execution result:", result.data);
           alert(`Query executed successfully. Rows affected: ${result.data.rowCount}`);
+          // Refresh table diff immediately
+          await fetchDiffs();
         } else {
           console.error("Error executing query:", result.error);
           alert(`Error: ${result.error}`);
@@ -243,147 +244,147 @@ export default function SelectTablePage() {
 
 return (
   <div className="p-8">
-    <h1 className="text-xl font-bold mb-4">Select Common Table</h1>
-    
-    {loading ? (
-      <p>Loading tables...</p>
-    ) : tables.length === 0 ? (
-      <p className="text-red-500">No common tables found.</p>
-    ) : (
-      <>
-        <div className="mb-4 flex items-center gap-6 sticky top-0 z-10 bg-white dark:bg-gray-900 py-4">
-          {/* Table Dropdown */}
-          <div>
-            <label htmlFor="tableSelect" className="font-medium mr-2">Table:</label>
-            <select
-              id="tableSelect"
-              className="border px-2 py-1 rounded bg-white text-black dark:bg-gray-800 dark:text-white dark:border-gray-600"
-              value={selectedTable}
-              onChange={(e) => setSelectedTable(e.target.value)}
-            >
-              {tables.map((table) => (
-                <option key={table} value={table}>{table}</option>
-              ))}
-            </select>
-          </div>
+  <h1 className="text-xl font-bold mb-4">Select Common Table</h1>
+  
+  {loading ? (
+    <p>Loading tables...</p>
+  ) : tables.length === 0 ? (
+    <p className="text-red-500">No common tables found.</p>
+  ) : (
+    <>
+      <div className="mb-4 flex items-center gap-6 sticky top-0 z-10 bg-white dark:bg-gray-900 py-4">
+        {/* Table Dropdown */}
+        <div>
+          <label htmlFor="tableSelect" className="font-medium mr-2">Table:</label>
+          <select
+            id="tableSelect"
+            className="border px-2 py-1 rounded bg-white text-black dark:bg-gray-800 dark:text-white dark:border-gray-600"
+            value={selectedTable}
+            onChange={(e) => setSelectedTable(e.target.value)}
+          >
+            {tables.map((table) => (
+              <option key={table} value={table}>{table}</option>
+            ))}
+          </select>
+        </div>
 
-          {/* Column Dropdown for key */}
-          <div className="flex items-center gap-2">
-            <label htmlFor="columnKeySelect" className="font-medium">
-             Key Column:</label>
-           <select
-              id="columnKeySelect"
-              className="border px-2 py-1 rounded bg-white text-black dark:bg-gray-800 dark:text-white dark:border-gray-600"
-              value={selectedKeyColumn}
-              onChange={(e) => setSelectedKeyColumn([e.target.value])}
-            >
-              <option value="">-- Select Key Column --</option>
-              {columns.map((col) => (
-                <option key={col} value={col}>
-                  {col}
-                </option>
-              ))}
-            </select>
-
-          </div>
-
-          {/* Column Dropdown */}
-          <div className="flex items-center gap-2 relative z-20">
-            <label htmlFor="columnSelect" className="font-medium">
-              Compare Column (Optional):
-            </label>
-            {loadingCols ? (
-              <span>Loading...</span>
-            ) : columns.length === 0 ? (
-              <span className="text-red-500">No common columns</span>
-            ) : (
-              <MultiSelectDropdown
-                options={columns}
-                selectedValues={selectedColumns}
-                onChange={setSelectedColumns}
-              />
-            )}
-          </div>
+        {/* Column Dropdown for key */}
+        <div className="flex items-center gap-2">
+          <label htmlFor="columnKeySelect" className="font-medium">
+          Key Column:</label>
+        <select
+            id="columnKeySelect"
+            className="border px-2 py-1 rounded bg-white text-black dark:bg-gray-800 dark:text-white dark:border-gray-600"
+            value={selectedKeyColumn}
+            onChange={(e) => setSelectedKeyColumn([e.target.value])}
+          >
+            <option value="">-- Select Key Column --</option>
+            {columns.map((col) => (
+              <option key={col} value={col}>
+                {col}
+              </option>
+            ))}
+          </select>
 
         </div>
 
-        {/* Diff column */}
-        {diffLoading ? (
-          <p>Loading row differences...</p>
-        ) : rowDiff.length === 0 ? (
-          <p className="text-green-600">No differences found.</p>
-        ) : (
-          <div className="mt-6 max-w-full overflow-x-auto">
-            <table className="min-w-full border border-gray-300 dark:border-gray-600 table-auto z-10">
-              <thead className="bg-indigo-600 text-white sticky top-0 z-0">
-                <tr>
-                  {/* <th className="px-4 py-2 border dark:border-gray-600 min-w-[60px]">Type</th> */}
-                  <th className="px-4 py-2 border dark:border-gray-600 min-w-[100px]">
-                    Key ({primaryKeys.join(", ")})
-                  </th>
-                  <th className="px-4 py-2 border dark:border-gray-600 min-w-[300px]">Env A</th>
-                  <th className="px-4 py-2 border dark:border-gray-600 min-w-[300px]">Env B</th>
-                  <th className="px-4 py-2 border dark:border-gray-600 min-w-[300px]">SQL</th>
-                  <th className="px-4 py-2 border dark:border-gray-600 min-w-[130px]">Action</th>
+        {/* Column Dropdown */}
+        <div className="flex items-center gap-2 relative z-20">
+          <label htmlFor="columnSelect" className="font-medium">
+            Compare Column (Optional):
+          </label>
+          {loadingCols ? (
+            <span>Loading...</span>
+          ) : columns.length === 0 ? (
+            <span className="text-red-500">No common columns</span>
+          ) : (
+            <MultiSelectDropdown
+              options={columns}
+              selectedValues={selectedColumns}
+              onChange={setSelectedColumns}
+            />
+          )}
+        </div>
+
+      </div>
+
+      {/* Diff column */}
+      {diffLoading ? (
+        <p>Loading row differences...</p>
+      ) : rowDiff.length === 0 ? (
+        <p className="text-green-600">No differences found.</p>
+      ) : (
+        <div className="mt-6 max-w-full overflow-x-auto">
+          <table className="min-w-full border border-gray-300 dark:border-gray-600 table-auto z-10">
+            <thead className="bg-indigo-600 text-white sticky top-0 z-0">
+              <tr>
+                {/* <th className="px-4 py-2 border dark:border-gray-600 min-w-[60px]">Type</th> */}
+                <th className="px-4 py-2 border dark:border-gray-600 min-w-[100px]">
+                  Key ({primaryKeys.join(", ")})
+                </th>
+                <th className="px-4 py-2 border dark:border-gray-600 min-w-[300px]">Env A</th>
+                <th className="px-4 py-2 border dark:border-gray-600 min-w-[300px]">Env B</th>
+                <th className="px-4 py-2 border dark:border-gray-600 min-w-[300px]">SQL</th>
+                <th className="px-4 py-2 border dark:border-gray-600 min-w-[130px]">Action</th>
+              </tr>
+            </thead>
+            <tbody className="bg-white dark:bg-gray-800 text-black dark:text-gray-100">
+              {rowDiff.map((diff, index) => (
+                <tr key={index} className="border-t dark:border-gray-700">
+                  {/* <td className="px-4 py-2 border dark:border-gray-700 text-xs break-words whitespace-pre-wrap">
+                    {diff.type}
+                  </td> */}
+                  <td className="px-4 py-2 border dark:border-gray-700 text-xs break-all whitespace-pre-wrap">
+                    {diff.key}
+                  </td>
+                  <td className="px-4 py-2 border dark:border-gray-700 text-xs break-all whitespace-pre-wrap font-mono text-green-700 dark:text-green-400">
+                    <pre className="whitespace-pre-wrap break-words">
+                      {JSON.stringify(diff.row, null, 2)}
+                    </pre>
+                  </td>
+                  <td className="px-4 py-2 border dark:border-gray-700 text-xs break-all whitespace-pre-wrap font-mono text-red-700 dark:text-red-400">
+                    <pre className="whitespace-pre-wrap break-words">
+                      {diff.oldRow ? JSON.stringify(diff.oldRow, null, 2) : "—"}
+                    </pre>
+                  </td>
+                  <td className="px-4 py-2 border dark:border-gray-700 text-xs whitespace-pre-wrap break-all font-mono dark:text-indigo-300">
+                    <pre className="whitespace-pre-wrap break-words">
+                      {generateSQL(diff)}
+                    </pre>
+                  </td>
+                  <td className="px-4 py-2 border dark:border-gray-700 text-xs whitespace-pre-wrap break-all font-mono dark:text-indigo-300">
+                    <button className="bg-blue-800 text-white px-2 py-2 rounded hover:bg-blue-700"
+                    onClick={() => openModal(generateSQL(diff))}
+                    >{diff.buttonName}</button>
+                  </td>
                 </tr>
-              </thead>
-              <tbody className="bg-white dark:bg-gray-800 text-black dark:text-gray-100">
-                {rowDiff.map((diff, index) => (
-                  <tr key={index} className="border-t dark:border-gray-700">
-                    {/* <td className="px-4 py-2 border dark:border-gray-700 text-xs break-words whitespace-pre-wrap">
-                      {diff.type}
-                    </td> */}
-                    <td className="px-4 py-2 border dark:border-gray-700 text-xs break-all whitespace-pre-wrap">
-                      {diff.key}
-                    </td>
-                    <td className="px-4 py-2 border dark:border-gray-700 text-xs break-all whitespace-pre-wrap font-mono text-green-700 dark:text-green-400">
-                      <pre className="whitespace-pre-wrap break-words">
-                        {JSON.stringify(diff.row, null, 2)}
-                      </pre>
-                    </td>
-                    <td className="px-4 py-2 border dark:border-gray-700 text-xs break-all whitespace-pre-wrap font-mono text-red-700 dark:text-red-400">
-                      <pre className="whitespace-pre-wrap break-words">
-                        {diff.oldRow ? JSON.stringify(diff.oldRow, null, 2) : "—"}
-                      </pre>
-                    </td>
-                    <td className="px-4 py-2 border dark:border-gray-700 text-xs whitespace-pre-wrap break-all font-mono dark:text-indigo-300">
-                      <pre className="whitespace-pre-wrap break-words">
-                        {generateSQL(diff)}
-                      </pre>
-                    </td>
-                    <td className="px-4 py-2 border dark:border-gray-700 text-xs whitespace-pre-wrap break-all font-mono dark:text-indigo-300">
-                      <button className="bg-blue-800 text-white px-2 py-2 rounded hover:bg-blue-700"
-                       onClick={() => openModal(generateSQL(diff))}
-                      >{diff.buttonName}</button>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-            <p className="mt-2 text-sm text-gray-600 dark:text-gray-300">
-              Total differences: {rowDiff.length}
-            </p>
-            {/* Modal */}
-            <Modal 
-              isOpen={isModalOpen} 
-              onClose={() => setIsModalOpen(false)}
-              onExecute={handleExecute}
-              initialSQL={selectedSQL}
-              >
-              <h2 className="text-lg font-bold mb-4 text-gray-900 dark:text-gray-100">
-                SQL Query
-              </h2>
-              <pre className="bg-gray-100 dark:bg-gray-900 p-4 rounded text-sm overflow-x-auto text-gray-800 dark:text-gray-200">
-                {selectedSQL}
-              </pre>
-            </Modal>
-          </div>
+              ))}
+            </tbody>
+          </table>
+          <p className="mt-2 text-sm text-gray-600 dark:text-gray-300">
+            Total differences: {rowDiff.length}
+          </p>
+          {/* Modal */}
+          <Modal 
+            isOpen={isModalOpen} 
+            onClose={() => setIsModalOpen(false)}
+            onExecute={handleExecute}
+            initialSQL={selectedSQL}
+            >
+            <h2 className="text-lg font-bold mb-4 text-gray-900 dark:text-gray-100">
+              SQL Query
+            </h2>
+            <pre className="bg-gray-100 dark:bg-gray-900 p-4 rounded text-sm overflow-x-auto text-gray-800 dark:text-gray-200">
+              {selectedSQL}
+            </pre>
+          </Modal>
+        </div>
 
-        )}
+      )}
 
-      </>
-    )}
-  </div>
+    </>
+  )}
+</div>
 );
 
 }
