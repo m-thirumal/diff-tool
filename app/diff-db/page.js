@@ -136,7 +136,14 @@ export default function SelectTablePage() {
         const pkValues = Object.fromEntries(primaryKeys.map(pk => [pk, rowA[pk]]));
         const rowB = mapB.get(keyValue);
         if (!rowB) {
-          diffs.push({ type: "INSERT", key: keyValue, row: rowA, buttonName: "INSERT to B", pkValues });
+            diffs.push({
+              type: "INSERT",
+              key: keyValue,
+              row: rowA,
+              buttonName: "INSERT to B",
+              buttonClass: "bg-green-600 hover:bg-green-500", // Tailwind classes for green
+              pkValues
+            });
         } else {
           const diffObjA = {};
           const diffObjB = {};
@@ -151,7 +158,15 @@ export default function SelectTablePage() {
           });
 
           if (hasDiff) {
-            diffs.push({ type: "UPDATE", key: keyValue, row: diffObjA, oldRow: diffObjB, buttonName: "UPDATE to B", pkValues  });
+                diffs.push({
+                  type: "UPDATE",
+                  key: keyValue,
+                  row: diffObjA,
+                  oldRow: diffObjB,
+                  buttonName: "UPDATE to B",
+                  buttonClass: "bg-yellow-600 hover:bg-yellow-500", // Tailwind classes for yellow
+                  pkValues
+                })
           }
         }
       }
@@ -353,7 +368,7 @@ return (
                     </pre>
                   </td>
                   <td className="px-4 py-2 border dark:border-gray-700 text-xs whitespace-pre-wrap break-all font-mono dark:text-indigo-300">
-                    <button className="bg-blue-800 text-white px-2 py-2 rounded hover:bg-blue-700"
+                    <button className={`${diff.buttonClass} text-white px-2 py-2 rounded`}
                     onClick={() => openModal(generateSQL(diff))}
                     >{diff.buttonName}</button>
                   </td>
