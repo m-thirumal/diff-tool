@@ -2,6 +2,7 @@
 import { useEffect, useState } from "react";
 import { useDb } from "../context/DbContext";
 import MultiSelectDropdown from "../components/MultiSelectDropdown";
+import Modal from "../components/Modal";
 
 export default function SelectTablePage() {
   const { payload } = useDb();
@@ -21,6 +22,14 @@ export default function SelectTablePage() {
   // Row
   const [rowDiff, setRowDiff] = useState([]);
   const [diffLoading, setDiffLoading] = useState(false);
+  // Modal
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [selectedSQL, setSelectedSQL] = useState("");
+
+  const openModal = (sql) => {
+    setSelectedSQL(sql);
+    setIsModalOpen(true);
+  };
 
   useEffect(() => {
     async function fetchCommonTables() {
@@ -129,7 +138,7 @@ export default function SelectTablePage() {
             const pkValues = Object.fromEntries(primaryKeys.map(pk => [pk, rowA[pk]]));
             const rowB = mapB.get(keyValue);
             if (!rowB) {
-              diffs.push({ type: "INSERT into B", key: keyValue, row: rowA, pkValues });
+              diffs.push({ type: "INSERT", key: keyValue, row: rowA, buttonName: "INSERT to B", pkValues });
             } else {
               const diffObjA = {};
               const diffObjB = {};
@@ -144,7 +153,7 @@ export default function SelectTablePage() {
               });
 
               if (hasDiff) {
-                diffs.push({ type: "UPDATE in B", key: keyValue, row: diffObjA, oldRow: diffObjB, pkValues  });
+                diffs.push({ type: "UPDATE", key: keyValue, row: diffObjA, oldRow: diffObjB, buttonName: "UPDATE to B", pkValues  });
               }
             }
           }
@@ -205,6 +214,12 @@ export default function SelectTablePage() {
 
     return "-- Not supported";
   }
+
+  const handleExecute = (modifiedSQL) => {
+    console.log("Executing SQL:", modifiedSQL);
+    // TODO: Call backend API to run this SQL
+    setIsModalOpen(false);
+  };
 
 return (
   <div className="p-8">
@@ -282,13 +297,14 @@ return (
             <table className="min-w-full border border-gray-300 dark:border-gray-600 table-auto z-10">
               <thead className="bg-indigo-600 text-white sticky top-0 z-0">
                 <tr>
-                  <th className="px-4 py-2 border dark:border-gray-600 min-w-[100px]">Type</th>
-                  <th className="px-4 py-2 border dark:border-gray-600 min-w-[150px]">
+                  <th className="px-4 py-2 border dark:border-gray-600 min-w-[60px]">Type</th>
+                  <th className="px-4 py-2 border dark:border-gray-600 min-w-[100px]">
                     Key ({primaryKeys.join(", ")})
                   </th>
                   <th className="px-4 py-2 border dark:border-gray-600 min-w-[300px]">Env A</th>
                   <th className="px-4 py-2 border dark:border-gray-600 min-w-[300px]">Env B</th>
-                  <th className="px-4 py-2 border dark:border-gray-600 min-w-[300px]">Action (SQL)</th>
+                  <th className="px-4 py-2 border dark:border-gray-600 min-w-[300px]">SQL</th>
+                  <th className="px-4 py-2 border dark:border-gray-600 min-w-[140px]">Action</th>
                 </tr>
               </thead>
               <tbody className="bg-white dark:bg-gray-800 text-black dark:text-gray-100">
@@ -315,6 +331,11 @@ return (
                         {generateSQL(diff)}
                       </pre>
                     </td>
+                    <td className="px-4 py-2 border dark:border-gray-700 text-xs whitespace-pre-wrap break-all font-mono dark:text-indigo-300">
+                      <button className="bg-blue-800 text-white px-2 py-2 rounded hover:bg-blue-700"
+                       onClick={() => openModal(generateSQL(diff))}
+                      >{diff.buttonName}</button>
+                    </td>
                   </tr>
                 ))}
               </tbody>
@@ -322,6 +343,20 @@ return (
             <p className="mt-2 text-sm text-gray-600 dark:text-gray-300">
               Total differences: {rowDiff.length}
             </p>
+            {/* Modal */}
+            <Modal 
+              isOpen={isModalOpen} 
+              onClose={() => setIsModalOpen(false)}
+              onExecute={handleExecute}
+              initialSQL={selectedSQL}
+              >
+              <h2 className="text-lg font-bold mb-4 text-gray-900 dark:text-gray-100">
+                SQL Query
+              </h2>
+              <pre className="bg-gray-100 dark:bg-gray-900 p-4 rounded text-sm overflow-x-auto text-gray-800 dark:text-gray-200">
+                {selectedSQL}
+              </pre>
+            </Modal>
           </div>
 
         )}
