@@ -215,9 +215,29 @@ export default function SelectTablePage() {
     return "-- Not supported";
   }
 
-  const handleExecute = (modifiedSQL) => {
+  const handleExecute = async (modifiedSQL) => {
     console.log("Executing SQL:", modifiedSQL);
-    // TODO: Call backend API to run this SQL
+      try {
+        const res = await fetch("/api/modify-row", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ dbType, ...envB, sql: modifiedSQL }),
+        });
+
+        const result = await res.json();
+        if (res.ok) {
+          console.log("Execution result:", result.data);
+          alert(`Query executed successfully. Rows affected: ${result.data.rowCount}`);
+        } else {
+          console.error("Error executing query:", result.error);
+          alert(`Error: ${result.error}`);
+        }
+    } catch (err) {
+      console.error("Network error:", err);
+      alert(`Network error: ${err.message}`);
+    }
     setIsModalOpen(false);
   };
 
@@ -297,22 +317,22 @@ return (
             <table className="min-w-full border border-gray-300 dark:border-gray-600 table-auto z-10">
               <thead className="bg-indigo-600 text-white sticky top-0 z-0">
                 <tr>
-                  <th className="px-4 py-2 border dark:border-gray-600 min-w-[60px]">Type</th>
+                  {/* <th className="px-4 py-2 border dark:border-gray-600 min-w-[60px]">Type</th> */}
                   <th className="px-4 py-2 border dark:border-gray-600 min-w-[100px]">
                     Key ({primaryKeys.join(", ")})
                   </th>
                   <th className="px-4 py-2 border dark:border-gray-600 min-w-[300px]">Env A</th>
                   <th className="px-4 py-2 border dark:border-gray-600 min-w-[300px]">Env B</th>
                   <th className="px-4 py-2 border dark:border-gray-600 min-w-[300px]">SQL</th>
-                  <th className="px-4 py-2 border dark:border-gray-600 min-w-[140px]">Action</th>
+                  <th className="px-4 py-2 border dark:border-gray-600 min-w-[130px]">Action</th>
                 </tr>
               </thead>
               <tbody className="bg-white dark:bg-gray-800 text-black dark:text-gray-100">
                 {rowDiff.map((diff, index) => (
                   <tr key={index} className="border-t dark:border-gray-700">
-                    <td className="px-4 py-2 border dark:border-gray-700 text-xs break-words whitespace-pre-wrap">
+                    {/* <td className="px-4 py-2 border dark:border-gray-700 text-xs break-words whitespace-pre-wrap">
                       {diff.type}
-                    </td>
+                    </td> */}
                     <td className="px-4 py-2 border dark:border-gray-700 text-xs break-all whitespace-pre-wrap">
                       {diff.key}
                     </td>
