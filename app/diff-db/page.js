@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import { useDb } from "../context/DbContext";
 import MultiSelectDropdown from "../components/MultiSelectDropdown";
 import Modal from "../components/Modal";
+import { Trash2, Plus, Edit } from "lucide-react";
 
 export default function SelectTablePage() {
   const { payload } = useDb();
@@ -170,6 +171,20 @@ export default function SelectTablePage() {
           }
         }
       }
+      for (const [keyValue, rowB] of mapB.entries()) {
+        if (!mapA.has(keyValue)) {
+          const pkValues = Object.fromEntries(primaryKeys.map(pk => [pk, rowB[pk]]));
+          diffs.push({
+            type: "DELETE",
+            key: keyValue,
+            oldRow: rowB, // showing what would be deleted
+            buttonName: "DELETE from B",
+            buttonClass: "bg-red-600 hover:bg-red-500", // Tailwind red for delete
+            pkValues
+          });
+        }
+}
+
 /*
       for (const [keyValue, rowB] of mapB.entries()) {
         if (!mapA.has(keyValue)) {
@@ -224,6 +239,22 @@ export default function SelectTablePage() {
 
 
       return `UPDATE ${selectedTable} SET ${setClause} WHERE ${whereClause};`;
+    }
+
+    if (diff.type.startsWith("DELETE")) {
+      const whereClause = diff.pkValues
+        ? Object.entries(diff.pkValues)
+            .map(([pk, val]) => {
+              const safeVal =
+                typeof val === "number"
+                  ? val
+                  : `'${String(val).replace(/'/g, "''")}'`;
+              return `${pk}=${safeVal}`;
+            })
+            .join(" AND ")
+        : "-- Missing PK values";
+
+      return `DELETE FROM ${selectedTable} WHERE ${whereClause};`;
     }
 
     return "-- Not supported";
@@ -321,6 +352,15 @@ return (
           )}
         </div>
 
+        {/* 🔹 Refresh Button */}
+        <button
+          type="button"
+          onClick={fetchDiffs}
+          className="bg-blue-600 hover:bg-blue-500 text-white px-3 py-1 rounded shadow"
+        >
+          Refresh
+        </button>
+
       </div>
 
       {/* Diff column */}
@@ -369,8 +409,24 @@ return (
                   </td>
                   <td className="px-4 py-2 border dark:border-gray-700 text-xs whitespace-pre-wrap break-all font-mono dark:text-indigo-300">
                     <button className={`${diff.buttonClass} text-white px-2 py-2 rounded`}
-                    onClick={() => openModal(generateSQL(diff))}
-                    >{diff.buttonName}</button>
+                    onClick={() => openModal(generateSQL(diff))}>
+                       {diff.type === "DELETE" ? (
+                          <span className="flex items-center gap-1">
+                            <Trash2 size={16} />
+                            <span>from B</span>
+                          </span>
+                        ) : diff.type === "INSERT" ? (
+                          <span className="flex items-center gap-1">
+                            <Plus size={16} />
+                            <span>to B</span>
+                          </span>
+                        ) : diff.type === "UPDATE" ? (
+                          <span className="flex items-center gap-1">
+                            <Edit size={16} />
+                            <span>to B</span>
+                          </span>
+                        ) : null}
+                    </button>
                   </td>
                 </tr>
               ))}
