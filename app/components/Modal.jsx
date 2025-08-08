@@ -39,14 +39,17 @@ export default function Modal({ isOpen, onClose, onExecute, initialSQL }) {
           value={sqlText}
           onChange={(val) => setSqlText(val)}
           name="sql-editor"
-          fontSize={14}
+          fontSize={18}
           width="100%"
-          height="300px"
+          height="200px"
+          wrapEnabled={true}
           setOptions={{
             enableBasicAutocompletion: true,
             enableLiveAutocompletion: true,
             showLineNumbers: true,
             tabSize: 2,
+            wrap: true, // ✅ enables line wrapping
+            indentedSoftWrap: false
           }}
           className="border border-gray-300 dark:border-gray-700 rounded"
         />
