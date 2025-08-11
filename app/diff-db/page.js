@@ -183,7 +183,7 @@ export default function SelectTablePage() {
             pkValues
           });
         }
-}
+      }
 
 /*
       for (const [keyValue, rowB] of mapB.entries()) {
@@ -207,12 +207,14 @@ export default function SelectTablePage() {
   }, [selectedColumns, selectedTable, primaryKeys, selectedKeyColumn]);
 
   function generateSQL(diff) {
-    if (!diff || !diff.row) return "";
+    console.log("Generating SQL for diff:", diff);
+    if (!diff || (!diff.row && !diff.oldRow)) return "";
 
     const newRow = diff.row;
     const oldRow = diff.oldRow || {};
 
     if (diff.type.startsWith("INSERT")) {
+      console.log("Generating INSERT SQL for diff:", diff);
       const keys = Object.keys(newRow).join(", ");
       const values = Object.values(newRow)
         .map((v) => `'${String(v).replace(/'/g, "''")}'`)
@@ -221,6 +223,7 @@ export default function SelectTablePage() {
     }
 
     if (diff.type.startsWith("UPDATE")) {
+      console.log("Generating UPDATE SQL for diff:", diff);
       const setClause = Object.entries(newRow)
         .map(([k, v]) => `${k}='${String(v).replace(/'/g, "''")}'`)
         .join(", ");
@@ -242,6 +245,7 @@ export default function SelectTablePage() {
     }
 
     if (diff.type.startsWith("DELETE")) {
+      console.log("Generating DELETE SQL for diff:", diff);
       const whereClause = diff.pkValues
         ? Object.entries(diff.pkValues)
             .map(([pk, val]) => {
@@ -253,7 +257,7 @@ export default function SelectTablePage() {
             })
             .join(" AND ")
         : "-- Missing PK values";
-
+      console.log("Where clause:", whereClause);
       return `DELETE FROM ${selectedTable} WHERE ${whereClause};`;
     }
 
