@@ -37,26 +37,26 @@ export default function Home() {
       <center><h1 className="text-2xl font-bold mb-6">Database Comparison Tool</h1></center>
       <div className="mb-8">
         <label className="font-medium" htmlFor="dbType">Select Database Type:</label>
-        <select className="ml-4 border border-gray-300 rounded px-2 py-1 bg-white text-black dark:bg-gray-800 dark:text-white dark:border-gray-600" value={dbType} onChange={e => setDbType(e.target.value)}>
+        <select className="ml-4 border border-gray-300 rounded px-2 py-0 bg-white text-black dark:bg-gray-800 dark:text-white dark:border-gray-600" value={dbType} onChange={e => setDbType(e.target.value)}>
           {dbTypes.map(type => (
             <option key={type}>{type}</option>
           ))}
         </select>
       </div>
       <hr />
-      <div className="flex flex-col md:flex-row gap-2">
-        <div  className="p-4 flex-1">
-          <h2 className="text-lg font-semibold mb-4">Environment A</h2>
+      <div className="flex flex-col md:flex-row gap-12">
+        <div  className="p-3 flex-1">
+          <h2 className="text-lg font-semibold mb-4 text-center bg-blue-200">Environment A</h2>
           {renderEnvInputs(envA, setEnvA, "envA")}
         </div>
-        <div  className="p-4 flex-1">
-          <h2 className="text-lg font-semibold mb-4">Environment B</h2>
+        <div  className="p-3 flex-1">
+          <h2 className="text-lg font-semibold mb-4 text-center bg-blue-200">Environment B</h2>
           {renderEnvInputs(envB, setEnvB, "envB")}
         </div>
       </div>
-      <div className="flex justify-end mt-8">
+      <div className="flex justify-end mt-2">
         <button 
-          className="mt-8 bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
+          className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
           onClick={() => {
             console.log("Selected DB Type:", dbType);
             console.log("Env A:", envA);
@@ -64,7 +64,7 @@ export default function Home() {
             handleGetTables();
           }}
         >
-          Display Tables
+        Display Tables
         </button>
       </div>
    </div>
@@ -73,6 +73,7 @@ export default function Home() {
 
 function renderEnvInputs(env, setEnv, prefix) {
   const fields = [
+    { name: "name", label: "Environment Name" },
     { name: "host", label: "Host / IP" },
     { name: "port", label: "Port" },
     { name: "db", label: "Database Name" },
