@@ -217,7 +217,7 @@ export default function SelectTablePage() {
       console.log("Generating INSERT SQL for diff:", diff);
       const keys = Object.keys(newRow).join(", ");
       const values = Object.values(newRow)
-        .map((v) => `'${String(v).replace(/'/g, "''")}'`)
+        .map((v) => sqlValueFormatter(v))
         .join(", ");
       return `INSERT INTO ${selectedTable} (${keys}) VALUES (${values});`;
     }
@@ -225,7 +225,7 @@ export default function SelectTablePage() {
     if (diff.type.startsWith("UPDATE")) {
       console.log("Generating UPDATE SQL for diff:", diff);
       const setClause = Object.entries(newRow)
-        .map(([k, v]) => `${k}='${String(v).replace(/'/g, "''")}'`)
+        .map(([k, v]) => `${k}=${sqlValueFormatter(v)}`)
         .join(", ");
 
       const whereClause = diff.pkValues
@@ -234,7 +234,7 @@ export default function SelectTablePage() {
               const safeVal =
                 typeof val === "number"
                   ? val
-                  : `'${String(val).replace(/'/g, "''")}'`;
+                  : `${sqlValueFormatter(v)}`;
               return `${pk}=${safeVal}`;
             })
             .join(" AND ")
@@ -252,7 +252,7 @@ export default function SelectTablePage() {
               const safeVal =
                 typeof val === "number"
                   ? val
-                  : `'${String(val).replace(/'/g, "''")}'`;
+                  : `${sqlValueFormatter(v)}`;
               return `${pk}=${safeVal}`;
             })
             .join(" AND ")
@@ -262,6 +262,31 @@ export default function SelectTablePage() {
     }
 
     return "-- Not supported";
+  }
+
+  function sqlValueFormatter(value) {
+    if (value == null) return "NULL";
+
+    // Detect ISO 8601 date string
+    const isoDateRegex = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(\.\d+)?Z$/;
+
+    if (typeof value === "string" && isoDateRegex.test(value)) {
+      const d = new Date(value);
+      const pad = (n) => String(n).padStart(2, "0");
+
+      if (dbType?.toLowerCase() === "mysql") {
+        // MySQL DATETIME: YYYY-MM-DD HH:MM:SS
+        return `'${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())} ${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}'`;
+      }
+
+      if (dbType?.toLowerCase() === "postgresql") {
+        // PostgreSQL can accept ISO but let's format to match timestamp style
+        return `'${d.toISOString().replace("T", " ").replace("Z", "")}'`;
+      }
+    }
+
+    // Escape single quotes for safe SQL strings
+    return `'${String(value).replace(/'/g, "''")}'`;  
   }
 
   const handleExecute = async (modifiedSQL) => {
@@ -281,6 +306,7 @@ export default function SelectTablePage() {
           alert(`Query executed successfully. Rows affected: ${result.data.rowCount}`);
           // Refresh table diff immediately
           await fetchDiffs();
+          setIsModalOpen(false);
         } else {
           console.error("Error executing query:", result.error);
           alert(`Error: ${result.error}`);
@@ -289,7 +315,7 @@ export default function SelectTablePage() {
       console.error("Network error:", err);
       alert(`Network error: ${err.message}`);
     }
-    setIsModalOpen(false);
+   
   };
 
 return (
