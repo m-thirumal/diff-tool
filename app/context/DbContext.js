@@ -5,18 +5,27 @@ import { createContext, useContext, useState } from "react";
 const defaultPayload = {
   dbType: "PostgreSQL", //MySQL
   envA: {
-    host: "",
-    port: "3306",
-    db: "",
-    user: "",
-    password: "",
+    name: "DEV",
+    host: "localhost",
+    port: "5432",
+    db: "dev",
+    user: "postgres",
+    password: "thirumal",
   },
   envB: {
-    host: "",
-    port: "3306",
-    db: "",
-    user: "",
-    password: "",
+    name: "PRO",
+    host: "localhost",
+    port: "5432",
+    db: "pro",
+    user: "postgres",
+    password: "thirumal",
+  },
+  envC: {
+    host: "UAT",
+    port: "5432",
+    db: "uat",
+    user: "postgres",
+    password: "thirumal",
   },
 };
 
