@@ -19,7 +19,7 @@ Open [http://localhost:3000](http://localhost:3000) with your browser to see the
 ## How to use it
 #### Development (hot reload)
 ```
-DOCKERFILE=Dockerfile.dev CODE_MOUNT=. START_CMD="npm run dev" NODE_ENV=development docker compose --profile dev up --build
+docker compose --profile dev up --build
 ```
 
 * Uses Dockerfile.dev
@@ -38,3 +38,12 @@ DOCKERFILE=Dockerfile CODE_MOUNT=/app START_CMD="npm start" NODE_ENV=production 
 * No code mount → container has its own copy of the app
 
 * Runs `npm start`
+
+## Reset the volume (recommended for dev)
+
+```
+docker compose down -v
+docker compose up --build
+```
+
+This will delete `pgdata_dev` and `pgdata_prod` volumes, wiping all data and reinitializing with the new password.

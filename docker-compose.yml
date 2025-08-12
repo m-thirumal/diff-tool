@@ -4,34 +4,34 @@ services:
   web:
     build:
       context: .
-      dockerfile: ${DOCKERFILE:-Dockerfile}
+      dockerfile: ${DOCKERFILE}
     ports:
       - "3000:3000"
     depends_on:
       - db_dev
       - db_prod
     environment:
-      DB_DEV_URL: postgresql://postgres:postgres@db_dev:5432/dev
-      DB_PROD_URL: postgresql://postgres:postgres@db_prod:5432/pro
-      NODE_ENV: ${NODE_ENV:-development}
+      DB_DEV_URL: postgresql://${DB_DEV_USER}:${DB_DEV_PASS}@${DB_DEV_HOST}:${DB_DEV_PORT}/${DB_DEV_NAME}
+      DB_PROD_URL: postgresql://${DB_PROD_USER}:${DB_PROD_PASS}@${DB_PROD_HOST}:${DB_PROD_PORT}/${DB_PROD_NAME}
+      NODE_ENV: ${NODE_ENV}
     volumes:
-      - ${CODE_MOUNT:-/app}:/app
+      - ${CODE_MOUNT}:/app
       - /app/node_modules
       - ./wait-for.sh:/wait-for.sh
     command: >
-      /bin/sh -c "./wait-for.sh db_dev true &&
-                  ./wait-for.sh db_prod true &&
-                  ${START_CMD:-npm run dev}"
+      /bin/sh -c "./wait-for.sh ${DB_DEV_HOST} true &&
+                  ./wait-for.sh ${DB_PROD_HOST} true &&
+                  ${START_CMD}"
 
   db_dev:
     image: postgres:17
     restart: unless-stopped
     environment:
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: postgres
-      POSTGRES_DB: dev
+      POSTGRES_USER: ${DB_DEV_USER}
+      POSTGRES_PASSWORD: ${DB_DEV_PASS}
+      POSTGRES_DB: ${DB_DEV_NAME}
     ports:
-      - "5432:5432"
+      - "${DB_DEV_PORT}:5432"
     volumes:
       - pgdata_dev:/var/lib/postgresql/data
       - ./seed/init-common.sql:/docker-entrypoint-initdb.d/00-init-common.sql
@@ -41,11 +41,11 @@ services:
     image: postgres:17
     restart: unless-stopped
     environment:
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: postgres
-      POSTGRES_DB: pro
+      POSTGRES_USER: ${DB_PROD_USER}
+      POSTGRES_PASSWORD: ${DB_PROD_PASS}
+      POSTGRES_DB: ${DB_PROD_NAME}
     ports:
-      - "5433:5432"
+      - "5433:5432" # Keep host port different if running both locally
     volumes:
       - pgdata_prod:/var/lib/postgresql/data
       - ./seed/init-common.sql:/docker-entrypoint-initdb.d/00-init-common.sql
