@@ -1,0 +1,11 @@
+FROM node:24.5.0-alpine
+
+WORKDIR /app
+
+COPY package*.json ./
+RUN npm install && npm install -g npm@latest
+
+# Copy the rest only for initial build — live changes will come via bind mount
+COPY . .
+
+EXPOSE 3000

@@ -16,21 +16,25 @@ bun dev
 
 Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
 
-You can start editing the page by modifying `app/page.js`. The page auto-updates as you edit the file.
+## How to use it
+#### Development (hot reload)
+```
+DOCKERFILE=Dockerfile.dev CODE_MOUNT=. START_CMD="npm run dev" NODE_ENV=development docker compose --profile dev up --build
+```
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+* Uses Dockerfile.dev
 
-## Learn More
+* Mounts your local code (CODE_MOUNT=.) for live reload
 
-To learn more about Next.js, take a look at the following resources:
+* Runs `npm run dev`
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+#### Production
+```
+DOCKERFILE=Dockerfile CODE_MOUNT=/app START_CMD="npm start" NODE_ENV=production docker compose --profile prod up --build
+```
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+* Uses Dockerfile (optimized build)
 
-## Deploy on Vercel
+* No code mount → container has its own copy of the app
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+* Runs `npm start`
