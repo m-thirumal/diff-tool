@@ -1,6 +1,6 @@
 # Diff Tool 🛠️
 
-> A web-based tool to compare database changes (DML) between **DEV** and **PRO** environments during release, with direct execution, logging, and multi-database support.
+A web-based tool to compare database changes (DML) between **DEV** and **PRO** environments during release, with direct execution, logging, and multi-database support.
 
 ---
 
@@ -54,7 +54,7 @@ It supports both **PostgreSQL** and **MySQL**, and is designed to run entirely f
 
 ---
 
-## 🚀 Getting Started
+# 🚀 Getting Started
 
 ### 1️⃣ Clone the repo
 ```bash
@@ -72,9 +72,43 @@ bun dev
 
 Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
 
-## Update `.env` file for default values (OR) for docker(Mandaotry)
-```
+## Update `.env` file for default values (OR) for docker(Mandatory)
+PostgreSQL example
+```bash
+# General
+NODE_ENV=development
+DOCKERFILE=Dockerfile.dev
+CODE_MOUNT=.
+START_CMD=npm run dev
 
+# Dev DB
+DB_DEV_HOST=db_dev
+DB_DEV_PORT=5432
+DB_DEV_NAME=dev
+DB_DEV_USER=postgres
+DB_DEV_PASS=thirumal
+
+# Prod DB
+DB_PROD_HOST=db_prod
+DB_PROD_PORT=5432
+DB_PROD_NAME=pro
+DB_PROD_USER=postgres
+DB_PROD_PASS=thirumal
+
+# Next.js public env vars
+NEXT_PUBLIC_ENV_A_NAME=DEV
+NEXT_PUBLIC_DB_DEV_HOST=${DB_DEV_HOST}
+NEXT_PUBLIC_DB_DEV_PORT=${DB_DEV_PORT}
+NEXT_PUBLIC_DB_DEV_NAME=${DB_DEV_NAME}
+NEXT_PUBLIC_DB_DEV_USER=${DB_DEV_USER}
+NEXT_PUBLIC_DB_DEV_PASS=${DB_DEV_PASS}
+
+NEXT_PUBLIC_ENV_B_NAME=PRO
+NEXT_PUBLIC_DB_PROD_HOST=${DB_PROD_HOST}
+NEXT_PUBLIC_DB_PROD_PORT=${DB_PROD_PORT}
+NEXT_PUBLIC_DB_PROD_NAME=${DB_PROD_NAME}
+NEXT_PUBLIC_DB_PROD_USER=${DB_PROD_USER}
+NEXT_PUBLIC_DB_PROD_PASS=${DB_PROD_PASS}
 ```
 
 ## Start with Docker (Development (hot reload))
