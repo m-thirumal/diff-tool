@@ -327,7 +327,7 @@ export default function SelectTablePage() {
   };
 
 return (
-  <div className="p-8">
+  <div className="p-2 font-sans">
   <h1 className="text-xl font-bold mb-4">Select Common Table</h1>
   
   {loading ? (
@@ -336,7 +336,7 @@ return (
     <p className="text-red-500">No common tables found.</p>
   ) : (
     <>
-      <div className="mb-4 flex items-center gap-6 sticky top-0 z-10 bg-white dark:bg-gray-900 py-4">
+      <div className="mb-4 flex items-center gap-6 sticky top-0 z-10 bg-white dark:bg-gray-900 py-1 px-2 shadow">
         {/* Table Dropdown */}
         <div>
           <label htmlFor="tableSelect" className="font-medium mr-2">Table:</label>
@@ -394,7 +394,7 @@ return (
         <button
           type="button"
           onClick={fetchDiffs}
-          className="bg-blue-600 hover:bg-blue-500 text-white px-3 py-1 rounded shadow"
+          className="bg-blue-600 hover:bg-blue-500 text-white px-5 py-1 rounded shadow"
         >
           Refresh
         </button>
@@ -415,8 +415,8 @@ return (
                 <th className="px-4 py-2 border dark:border-gray-600 min-w-[120px]">
                   Key ({primaryKeys.join(", ")})
                 </th>
-                <th className="px-4 py-2 border dark:border-gray-600 min-w-[300px]">Env A</th>
-                <th className="px-4 py-2 border dark:border-gray-600 min-w-[300px]">Env B</th>
+                <th className="px-4 py-2 border dark:border-gray-600 min-w-[300px]">{envA ? envA.name : "Env A"}</th>
+                <th className="px-4 py-2 border dark:border-gray-600 min-w-[300px]">{envB ? envB.name : "Env B"}</th>
                 <th className="px-4 py-2 border dark:border-gray-600 min-w-[300px]">SQL</th>
                 <th className="px-4 py-2 border dark:border-gray-600 min-w-[130px]">Action</th>
               </tr>
