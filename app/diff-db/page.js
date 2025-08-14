@@ -4,6 +4,8 @@ import { useDb } from "../context/DbContext";
 import MultiSelectDropdown from "../components/MultiSelectDropdown";
 import Modal from "../components/Modal";
 import { Trash2, Plus, Edit } from "lucide-react";
+import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
+import { oneDark, oneLight } from 'react-syntax-highlighter/dist/esm/styles/prism';
 
 export default function SelectTablePage() {
   const { payload } = useDb();
@@ -26,6 +28,12 @@ export default function SelectTablePage() {
   // Modal
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedSQL, setSelectedSQL] = useState("");
+  // Dark Mode
+  const [isDarkMode, setIsDarkMode] = useState(false);
+
+  useEffect(() => {
+    setIsDarkMode(document.documentElement.classList.contains("dark"));
+  }, []);
 
   const openModal = (sql) => {
     setSelectedSQL(sql);
@@ -404,7 +412,7 @@ return (
             <thead className="bg-indigo-600 text-white sticky top-0 z-0">
               <tr>
                 {/* <th className="px-4 py-2 border dark:border-gray-600 min-w-[60px]">Type</th> */}
-                <th className="px-4 py-2 border dark:border-gray-600 min-w-[100px]">
+                <th className="px-4 py-2 border dark:border-gray-600 min-w-[120px]">
                   Key ({primaryKeys.join(", ")})
                 </th>
                 <th className="px-4 py-2 border dark:border-gray-600 min-w-[300px]">Env A</th>
@@ -423,19 +431,86 @@ return (
                     {diff.key}
                   </td>
                   <td className="px-4 py-2 border dark:border-gray-700 text-xs break-all whitespace-pre-wrap font-mono text-green-700 dark:text-green-400">
-                    <pre className="whitespace-pre-wrap break-words">
-                      {JSON.stringify(diff.row, null, 2)}
-                    </pre>
+                    <div className="overflow-x-auto">
+                      <SyntaxHighlighter
+                        language="json"
+                        style={isDarkMode ? oneDark : oneLight}
+                        wrapLongLines={true}
+                        PreTag="div" // <- important: replaces <pre> so white-space rules can apply
+                        codeTagProps={{
+                          style: {
+                            whiteSpace: "pre-wrap",
+                            wordBreak: "break-all",
+                            overflowWrap: "break-word",
+                          },
+                        }}
+                        customStyle={{
+                          fontSize: "0.75rem",
+                          borderRadius: "0.5rem",
+                          whiteSpace: "pre-wrap",
+                          wordBreak: "break-all",
+                          overflowWrap: "break-word",
+                          margin: 0,
+                        }}
+                      >
+                        {JSON.stringify(diff.row, null, 2)}
+                      </SyntaxHighlighter>
+                    </div>
                   </td>
                   <td className="px-4 py-2 border dark:border-gray-700 text-xs break-all whitespace-pre-wrap font-mono text-red-700 dark:text-red-400">
-                    <pre className="whitespace-pre-wrap break-words">
-                      {diff.oldRow ? JSON.stringify(diff.oldRow, null, 2) : "—"}
-                    </pre>
+                    <div className="overflow-x-auto">
+                      <SyntaxHighlighter
+                        language="json"
+                        style={isDarkMode ? oneDark : oneLight}
+                        wrapLongLines={true}
+                        PreTag="div" // <- important: replaces <pre> so white-space rules can apply
+                        codeTagProps={{
+                          style: {
+                            whiteSpace: "pre-wrap",
+                            wordBreak: "break-all",
+                            overflowWrap: "break-word",
+                          },
+                        }}
+                        customStyle={{
+                          fontSize: "0.75rem",
+                          borderRadius: "0.5rem",
+                          whiteSpace: "pre-wrap",
+                          wordBreak: "break-all",
+                          overflowWrap: "break-word",
+                          margin: 0,
+                        }}
+                      >
+                        {diff.oldRow ? JSON.stringify(diff.oldRow, null, 2) : "—"}
+                      </SyntaxHighlighter>
+                    </div>
                   </td>
                   <td className="px-4 py-2 border dark:border-gray-700 text-xs whitespace-pre-wrap break-all font-mono dark:text-indigo-300">
-                    <pre className="whitespace-pre-wrap break-words">
-                      {generateSQL(diff)}
-                    </pre>
+                    <div className="overflow-x-auto">
+                      <SyntaxHighlighter
+                        language="sql"
+                        style={isDarkMode ? oneDark : oneLight}
+                        wrapLongLines={true}
+                        PreTag="div" // <- important: replaces <pre> so white-space rules can apply
+                        codeTagProps={{
+                          style: {
+                            whiteSpace: "pre-wrap",
+                            wordBreak: "break-all",
+                            overflowWrap: "break-word",
+                          },
+                        }}
+                        customStyle={{
+                          fontSize: "0.75rem",
+                          borderRadius: "0.5rem",
+                          whiteSpace: "pre-wrap",
+                          wordBreak: "break-all",
+                          overflowWrap: "break-word",
+                          margin: 0,
+                        }}
+                      >
+                        {generateSQL(diff)}
+                      </SyntaxHighlighter>
+                    </div>
+                    
                   </td>
                   <td className="px-4 py-2 border dark:border-gray-700 text-xs whitespace-pre-wrap break-all font-mono dark:text-indigo-300">
                     <button className={`${diff.buttonClass} text-white px-2 py-2 rounded`}
