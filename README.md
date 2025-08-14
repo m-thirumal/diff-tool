@@ -14,7 +14,7 @@ It supports both **PostgreSQL** and **MySQL**, and is designed to run entirely f
 
 ## 🎥 Demo
 
-<img src="docs/demo.gif" width="800" alt="Diff Tool Demo">
+![Diff Tool Demo](docs/demo.gif)
 
 > The GIF above shows:
 > 1. Selecting **DEV** and **PRO** databases
