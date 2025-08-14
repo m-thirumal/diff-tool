@@ -157,12 +157,16 @@ This will delete `pgdata_dev` and `pgdata_prod` volumes, wiping all data and rei
  └── README.md
 ```
 
-# Example Flow
+# Deployment
 
-* Select DEV and PRO environments.
-* Click Generate Diff to see DML differences.
-* Review and Execute if approved.
-* Logs are automatically recorded.
+## Deploy as WAR
+
+```
+npm run build
+jar -cvf diff-db.war *
+```
+## Deploy it in Docker
+
 
 📜 License
 
