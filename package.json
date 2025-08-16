@@ -20,7 +20,9 @@
     "react": "19.1.0",
     "react-ace": "^14.0.1",
     "react-dom": "19.1.0",
-    "react-syntax-highlighter": "^15.6.1"
+    "react-syntax-highlighter": "^15.6.1",
+    "sqlite": "^5.1.1",
+    "sqlite3": "^5.1.7"
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4",

@@ -6,6 +6,7 @@ import Modal from "../components/Modal";
 import { Trash2, Plus, Edit } from "lucide-react";
 import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
 import { oneDark, oneLight } from 'react-syntax-highlighter/dist/esm/styles/prism';
+import { logAudit } from "../utils/audit";  
 
 export default function SelectTablePage() {
   const { payload } = useDb();
@@ -210,6 +211,11 @@ export default function SelectTablePage() {
     }
   }
 
+  // fetchAuditLogs = async () => {
+  //   if (!dbType || !envA || !envB) return;
+
+  // }
+
   useEffect(() => {
     fetchDiffs();
   }, [selectedColumns, selectedTable, primaryKeys, selectedKeyColumn]);
@@ -312,6 +318,9 @@ export default function SelectTablePage() {
         if (res.ok) {
           console.log("Execution result:", result.data);
           alert(`Query executed successfully. Rows affected: ${result.data.rowCount}`);
+           // ✅ centralised audit log
+          await logAudit({ query: modifiedSQL, dbType, executedBy: "UI" });
+
           // Refresh table diff immediately
           await fetchDiffs();
           setIsModalOpen(false);
@@ -398,6 +407,14 @@ return (
         >
           Refresh
         </button>
+
+          {/* <button
+          type="button"
+          onClick={fetchAuditLogs}
+          className="bg-blue-600 hover:bg-blue-500 text-white px-5 py-1 rounded shadow"
+        >
+          Audit Log
+        </button> */}
 
       </div>
 
