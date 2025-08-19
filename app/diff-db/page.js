@@ -37,6 +37,9 @@ export default function SelectTablePage() {
   const router = useRouter();
   // Previous row snapshot for audit logging
   const [selectedDiff, setSelectedDiff] = useState(null);
+  // Set row count variables
+  const [rowACount, setRowACount] = useState(0);  
+  const [rowBCount, setRowBCount] = useState(0);
 
 
   useEffect(() => {
@@ -144,6 +147,9 @@ export default function SelectTablePage() {
       const rowsA = dataA.data || [];
       const rowsB = dataB.data || [];
 
+      setRowACount(dataA.count);
+      setRowBCount(dataB.count);
+
       // Create a map of rows by selectedColumn
       const mapA = new Map(rowsA.map(row => [row[selectedKeyColumn], row]));
       const mapB = new Map(rowsB.map(row => [row[selectedKeyColumn], row]));
@@ -201,15 +207,6 @@ export default function SelectTablePage() {
           });
         }
       }
-
-/*
-      for (const [keyValue, rowB] of mapB.entries()) {
-        if (!mapA.has(keyValue)) {
-          const pkValues = Object.fromEntries(primaryKeys.map(pk => [pk, rowB[pk]]));
-          diffs.push({ type: "INSERT into A", key: keyValue, row: rowB, pkValues });
-        }
-      }
-*/
       console.log("Diffs:", diffs);
       setRowDiff(diffs);
     } catch (err) {
@@ -218,11 +215,6 @@ export default function SelectTablePage() {
       setDiffLoading(false);
     }
   }
-
-  // fetchAuditLogs = async () => {
-  //   if (!dbType || !envA || !envB) return;
-
-  // }
 
   useEffect(() => {
     fetchDiffs();
@@ -443,16 +435,26 @@ return (
       ) : (
         <div className="mt-6 max-w-full overflow-x-auto">
           <table className="min-w-full border border-gray-300 dark:border-gray-600 table-auto z-10">
-            <thead className="bg-indigo-600 text-white sticky top-0 z-0">
+            <thead className="bg-green-900 text-white sticky top-0 z-0">
               <tr>
                 {/* <th className="px-4 py-2 border dark:border-gray-600 min-w-[60px]">Type</th> */}
-                <th className="px-4 py-2 border dark:border-gray-600 min-w-[120px]">
-                  PK ({primaryKeys.join(", ")})
+                <th className="px-2 py-1 border dark:border-gray-600 min-w-[120px]">
+                  PK {primaryKeys.join(", ")}
                 </th>
-                <th className="px-4 py-2 border dark:border-gray-600 min-w-[300px]">{envA ? envA.name : "Env A"}</th>
-                <th className="px-4 py-2 border dark:border-gray-600 min-w-[300px]">{envB ? envB.name : "Env B"}</th>
-                <th className="px-4 py-2 border dark:border-gray-600 min-w-[300px]">SQL</th>
-                <th className="px-4 py-2 border dark:border-gray-600 min-w-[130px]">Action</th>
+                <th className="px-2 py-1 border dark:border-gray-600 min-w-[300px]">
+                  {envA ? envA.name : "Env A"}
+                  <div className="text-xs text-gray-200">
+                    Rows: {rowACount ?? "—"}
+                  </div>
+                </th>
+                <th className="px-2 py-1 border dark:border-gray-600 min-w-[300px]">
+                  {envB ? envB.name : "Env B"}
+                  <div className="text-xs text-gray-200">
+                    Rows: {rowBCount ?? "—"}
+                  </div>
+                </th>
+                <th className="px-2 py-1 border dark:border-gray-600 min-w-[300px]">SQL</th>
+                <th className="px-2 py-1 border dark:border-gray-600 min-w-[130px]">Action</th>
               </tr>
             </thead>
             <tbody className="bg-white dark:bg-gray-800 text-black dark:text-gray-100">
