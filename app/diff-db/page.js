@@ -223,14 +223,12 @@ export default function SelectTablePage() {
   }, [selectedColumns, selectedTable, primaryKeys, selectedKeyColumn]);
 
   function generateSQL(diff) {
-    console.log("Generating SQL for diff:", diff);
     if (!diff || (!diff.row && !diff.oldRow)) return "";
 
     const newRow = diff.row;
     const oldRow = diff.oldRow || {};
 
     if (diff.type.startsWith("INSERT")) {
-      console.log("Generating INSERT SQL for diff:", diff);
       const keys = Object.keys(newRow).join(", ");
       const values = Object.values(newRow)
         .map((v) => sqlValueFormatter(v))
@@ -239,7 +237,6 @@ export default function SelectTablePage() {
     }
 
     if (diff.type.startsWith("UPDATE")) {
-      console.log("Generating UPDATE SQL for diff:", diff);
       const setClause = Object.entries(newRow)
         .map(([k, v]) => `${k}=${sqlValueFormatter(v)}`)
         .join(", ");
@@ -261,7 +258,6 @@ export default function SelectTablePage() {
     }
 
     if (diff.type.startsWith("DELETE")) {
-      console.log("Generating DELETE SQL for diff:", diff);
       const whereClause = diff.pkValues
         ? Object.entries(diff.pkValues)
             .map(([pk, val]) => {
@@ -273,7 +269,6 @@ export default function SelectTablePage() {
             })
             .join(" AND ")
         : "-- Missing PK values";
-      console.log("Where clause:", whereClause);
       return `DELETE FROM ${selectedTable} WHERE ${whereClause};`;
     }
 
@@ -460,119 +455,124 @@ return (
               </tr>
             </thead>
             <tbody className="bg-white dark:bg-gray-800 text-black dark:text-gray-100">
-              {rowDiff.map((diff, index) => (
-                <tr key={index} className="border-t dark:border-gray-700">
-                  {/* <td className="px-4 py-2 border dark:border-gray-700 text-xs break-words whitespace-pre-wrap">
-                    {diff.type}
-                  </td> */}
-                  <td className="px-4 py-2 border dark:border-gray-700 text-xs break-all whitespace-pre-wrap">
-                    {diff.key}
-                  </td>
-                  <td className="px-4 py-2 border dark:border-gray-700 text-xs break-all whitespace-pre-wrap font-mono text-green-700 dark:text-green-400">
-                    <div className="overflow-x-auto">
-                      <SyntaxHighlighter
-                        language="json"
-                        style={isDarkMode ? oneDark : oneLight}
-                        wrapLongLines={true}
-                        PreTag="div" // <- important: replaces <pre> so white-space rules can apply
-                        codeTagProps={{
-                          style: {
+              {rowDiff.map((diff, index) => {
+                const sql = generateSQL(diff);
+                const rowJson = JSON.stringify(diff.row, null, 2);
+                const oldRowJson = diff.oldRow ? JSON.stringify(diff.oldRow, null, 2) : "—";
+                return (
+                  <tr key={index} className="border-t dark:border-gray-700">
+                    {/* <td className="px-4 py-2 border dark:border-gray-700 text-xs break-words whitespace-pre-wrap">
+                      {diff.type}
+                    </td> */}
+                    <td className="px-4 py-2 border dark:border-gray-700 text-xs break-all whitespace-pre-wrap">
+                      {diff.key}
+                    </td>
+                    <td className="px-4 py-2 border dark:border-gray-700 text-xs break-all whitespace-pre-wrap font-mono text-green-700 dark:text-green-400">
+                      <div className="overflow-x-auto">
+                        <SyntaxHighlighter
+                          language="json"
+                          style={isDarkMode ? oneDark : oneLight}
+                          wrapLongLines={true}
+                          PreTag="div" // <- important: replaces <pre> so white-space rules can apply
+                          codeTagProps={{
+                            style: {
+                              whiteSpace: "pre-wrap",
+                              wordBreak: "break-all",
+                              overflowWrap: "break-word",
+                            },
+                          }}
+                          customStyle={{
+                            fontSize: "0.75rem",
+                            borderRadius: "0.5rem",
                             whiteSpace: "pre-wrap",
                             wordBreak: "break-all",
                             overflowWrap: "break-word",
-                          },
-                        }}
-                        customStyle={{
-                          fontSize: "0.75rem",
-                          borderRadius: "0.5rem",
-                          whiteSpace: "pre-wrap",
-                          wordBreak: "break-all",
-                          overflowWrap: "break-word",
-                          margin: 0,
-                        }}
-                      >
-                        {JSON.stringify(diff.row, null, 2)}
-                      </SyntaxHighlighter>
-                    </div>
-                  </td>
-                  <td className="px-4 py-2 border dark:border-gray-700 text-xs break-all whitespace-pre-wrap font-mono text-red-700 dark:text-red-400">
-                    <div className="overflow-x-auto">
-                      <SyntaxHighlighter
-                        language="json"
-                        style={isDarkMode ? oneDark : oneLight}
-                        wrapLongLines={true}
-                        PreTag="div" // <- important: replaces <pre> so white-space rules can apply
-                        codeTagProps={{
-                          style: {
+                            margin: 0,
+                          }}
+                        >
+                          {rowJson}
+                        </SyntaxHighlighter>
+                      </div>
+                    </td>
+                    <td className="px-4 py-2 border dark:border-gray-700 text-xs break-all whitespace-pre-wrap font-mono text-red-700 dark:text-red-400">
+                      <div className="overflow-x-auto">
+                        <SyntaxHighlighter
+                          language="json"
+                          style={isDarkMode ? oneDark : oneLight}
+                          wrapLongLines={true}
+                          PreTag="div" // <- important: replaces <pre> so white-space rules can apply
+                          codeTagProps={{
+                            style: {
+                              whiteSpace: "pre-wrap",
+                              wordBreak: "break-all",
+                              overflowWrap: "break-word",
+                            },
+                          }}
+                          customStyle={{
+                            fontSize: "0.75rem",
+                            borderRadius: "0.5rem",
                             whiteSpace: "pre-wrap",
                             wordBreak: "break-all",
                             overflowWrap: "break-word",
-                          },
-                        }}
-                        customStyle={{
-                          fontSize: "0.75rem",
-                          borderRadius: "0.5rem",
-                          whiteSpace: "pre-wrap",
-                          wordBreak: "break-all",
-                          overflowWrap: "break-word",
-                          margin: 0,
-                        }}
-                      >
-                        {diff.oldRow ? JSON.stringify(diff.oldRow, null, 2) : "—"}
-                      </SyntaxHighlighter>
-                    </div>
-                  </td>
-                  <td className="px-4 py-2 border dark:border-gray-700 text-xs whitespace-pre-wrap break-all font-mono dark:text-indigo-300">
-                    <div className="overflow-x-auto">
-                      <SyntaxHighlighter
-                        language="sql"
-                        style={isDarkMode ? oneDark : oneLight}
-                        wrapLongLines={true}
-                        PreTag="div" // <- important: replaces <pre> so white-space rules can apply
-                        codeTagProps={{
-                          style: {
+                            margin: 0,
+                          }}
+                        >
+                          {oldRowJson}
+                        </SyntaxHighlighter>
+                      </div>
+                    </td>
+                    <td className="px-4 py-2 border dark:border-gray-700 text-xs whitespace-pre-wrap break-all font-mono dark:text-indigo-300">
+                      <div className="overflow-x-auto">
+                        <SyntaxHighlighter
+                          language="sql"
+                          style={isDarkMode ? oneDark : oneLight}
+                          wrapLongLines={true}
+                          PreTag="div" // <- important: replaces <pre> so white-space rules can apply
+                          codeTagProps={{
+                            style: {
+                              whiteSpace: "pre-wrap",
+                              wordBreak: "break-all",
+                              overflowWrap: "break-word",
+                            },
+                          }}
+                          customStyle={{
+                            fontSize: "0.75rem",
+                            borderRadius: "0.5rem",
                             whiteSpace: "pre-wrap",
                             wordBreak: "break-all",
                             overflowWrap: "break-word",
-                          },
-                        }}
-                        customStyle={{
-                          fontSize: "0.75rem",
-                          borderRadius: "0.5rem",
-                          whiteSpace: "pre-wrap",
-                          wordBreak: "break-all",
-                          overflowWrap: "break-word",
-                          margin: 0,
-                        }}
-                      >
-                        {generateSQL(diff)}
-                      </SyntaxHighlighter>
-                    </div>
-                    
-                  </td>
-                  <td className="px-4 py-2 border dark:border-gray-700 text-xs whitespace-pre-wrap break-all font-mono dark:text-indigo-300">
-                    <button className={`${diff.buttonClass} text-white px-2 py-2 rounded`}
-                    onClick={() => openModal(generateSQL(diff), diff)}>
-                       {diff.type === "DELETE" ? (
-                          <span className="flex items-center gap-1">
-                            <Trash2 size={16} />
-                            <span>from B</span>
-                          </span>
-                        ) : diff.type === "INSERT" ? (
-                          <span className="flex items-center gap-1">
-                            <Plus size={16} />
-                            <span>to B</span>
-                          </span>
-                        ) : diff.type === "UPDATE" ? (
-                          <span className="flex items-center gap-1">
-                            <Edit size={16} />
-                            <span>to B</span>
-                          </span>
-                        ) : null}
-                    </button>
-                  </td>
-                </tr>
-              ))}
+                            margin: 0,
+                          }}
+                        >
+                          {sql}
+                        </SyntaxHighlighter>
+                      </div>
+                      
+                    </td>
+                    <td className="px-4 py-2 border dark:border-gray-700 text-xs whitespace-pre-wrap break-all font-mono dark:text-indigo-300">
+                      <button className={`${diff.buttonClass} text-white px-2 py-2 rounded`}
+                      onClick={() => openModal(generateSQL(diff), diff)}>
+                        {diff.type === "DELETE" ? (
+                            <span className="flex items-center gap-1">
+                              <Trash2 size={16} />
+                              <span>from B</span>
+                            </span>
+                          ) : diff.type === "INSERT" ? (
+                            <span className="flex items-center gap-1">
+                              <Plus size={16} />
+                              <span>to B</span>
+                            </span>
+                          ) : diff.type === "UPDATE" ? (
+                            <span className="flex items-center gap-1">
+                              <Edit size={16} />
+                              <span>to B</span>
+                            </span>
+                          ) : null}
+                      </button>
+                    </td>
+                  </tr>
+                );
+        })}
             </tbody>
           </table>
           <p className="mt-2 text-sm text-gray-600 dark:text-gray-300">
