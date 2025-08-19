@@ -1,9 +1,14 @@
 {
   "name": "diff-tool",
   "version": "0.1.0",
+  "description": "Diff Tool - Compare schema and data across environments",
+  "author": {
+    "name": "Thirumal M",
+    "email": "racetortoise@gmail.com"
+  },
   "private": true,
   "scripts": {
-    "dev": "next dev --turbopack",
+    "dev": "next dev --turbopack -p 2214",
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
