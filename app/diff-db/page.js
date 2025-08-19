@@ -1,5 +1,6 @@
 "use client";
 import { useEffect, useState } from "react";
+import { FixedSizeList as List } from "react-window";
 import { useDb } from "../context/DbContext";
 import MultiSelectDropdown from "../components/MultiSelectDropdown";
 import Modal from "../components/Modal";
@@ -431,10 +432,9 @@ return (
         <p className="text-green-600">No differences found.</p>
       ) : (
         <div className="mt-6 max-w-full overflow-x-auto">
-          <table className="min-w-full border border-gray-300 dark:border-gray-600 table-auto z-10">
+          {/*<table className="min-w-full border border-gray-300 dark:border-gray-600 table-auto z-10">
             <thead className="bg-green-900 text-white sticky top-0 z-0">
               <tr>
-                {/* <th className="px-4 py-2 border dark:border-gray-600 min-w-[60px]">Type</th> */}
                 <th className="px-2 py-1 border dark:border-gray-600 min-w-[120px]">
                   PK {primaryKeys.join(", ")}
                 </th>
@@ -460,10 +460,7 @@ return (
                 const rowJson = JSON.stringify(diff.row, null, 2);
                 const oldRowJson = diff.oldRow ? JSON.stringify(diff.oldRow, null, 2) : "—";
                 return (
-                  <tr key={index} className="border-t dark:border-gray-700">
-                    {/* <td className="px-4 py-2 border dark:border-gray-700 text-xs break-words whitespace-pre-wrap">
-                      {diff.type}
-                    </td> */}
+                  <tr key={index} className="border-t dark:border-gray-700">            
                     <td className="px-4 py-2 border dark:border-gray-700 text-xs break-all whitespace-pre-wrap">
                       {diff.key}
                     </td>
@@ -574,8 +571,131 @@ return (
                 );
         })}
             </tbody>
-          </table>
-          <p className="mt-2 text-sm text-gray-600 dark:text-gray-300">
+          </table>*/}
+          {/* Header */}
+          <div className="grid grid-cols-[140px_300px_300px_300px_130px] bg-green-900 text-white sticky top-0 z-10">
+
+            <div className="px-2 py-1 border-r dark:border-gray-600 flex items-center justify-center text-center">
+              PK {primaryKeys.join(", ")}
+            </div>
+            <div className="px-2 py-1 border-r dark:border-gray-600 text-center">
+              {envA ? envA.name : "Env A"}
+              <div className="text-xs text-gray-200">Rows: {rowACount ?? "—"}</div>
+            </div>
+            <div className="px-2 py-1 border-r dark:border-gray-600 text-center">
+              {envB ? envB.name : "Env B"}
+              <div className="text-xs text-gray-200">Rows: {rowBCount ?? "—"}</div>
+            </div>
+            <div className="px-2 py-1 border-r dark:border-gray-600 flex items-center justify-center text-center">
+              SQL
+            </div>
+            <div className="px-2 py-1 flex items-center justify-center text-center">
+              Action
+            </div>
+          </div>
+
+          {/* End of header */}
+          {/* Body */}
+          {/* Virtualized body */}
+          <div className="border border-gray-300 dark:border-gray-600 border-t-0">
+            <List
+              height={600} // viewport height
+              itemCount={rowDiff.length}
+              itemSize={200} // fixed row height, tweak as needed
+              width={"100%"}
+              className="border border-t-0 border-gray-300 dark:border-gray-600"
+            >
+              {({ index, style }) => {
+                const diff = rowDiff[index];
+                const sql = generateSQL(diff);
+                const rowJson = JSON.stringify(diff.row, null, 2);
+                const oldRowJson = diff.oldRow ? JSON.stringify(diff.oldRow, null, 2) : "—";
+
+                return (
+                  <div
+                    key={index}
+                    style={style}
+                    className="grid grid-cols-[140px_300px_300px_300px_130px] border-t dark:border-gray-700 text-xs"
+                  >
+                    {/* PK */}
+                    <div className="px-2 py-1 break-all whitespace-pre-wrap border-r dark:border-gray-700">
+                      {diff.key}
+                    </div>
+
+                    {/* Env A */}
+                    <div className="px-2 py-1 border-r dark:border-gray-700 font-mono text-green-700 dark:text-green-400 overflow-x-auto">
+                      <SyntaxHighlighter
+                        language="json"
+                        style={isDarkMode ? oneDark : oneLight}
+                        wrapLongLines
+                        PreTag="div"
+                        codeTagProps={{ style: { whiteSpace: "pre-wrap", wordBreak: "break-all" } }}
+                        customStyle={{ fontSize: "0.75rem", margin: 0 }}
+                      >
+                        {rowJson}
+                      </SyntaxHighlighter>
+                    </div>
+
+                    {/* Env B */}
+                    <div className="px-2 py-1 border-r dark:border-gray-700 font-mono text-red-700 dark:text-red-400 overflow-x-auto">
+                      <SyntaxHighlighter
+                        language="json"
+                        style={isDarkMode ? oneDark : oneLight}
+                        wrapLongLines
+                        PreTag="div"
+                        codeTagProps={{ style: { whiteSpace: "pre-wrap", wordBreak: "break-all" } }}
+                        customStyle={{ fontSize: "0.75rem", margin: 0 }}
+                      >
+                        {oldRowJson}
+                      </SyntaxHighlighter>
+                    </div>
+
+                    {/* SQL */}
+                    <div className="px-2 py-1 border-r dark:border-gray-700 font-mono dark:text-indigo-300 overflow-x-auto">
+                      <SyntaxHighlighter
+                        language="sql"
+                        style={isDarkMode ? oneDark : oneLight}
+                        wrapLongLines
+                        PreTag="div"
+                        codeTagProps={{ style: { whiteSpace: "pre-wrap", wordBreak: "break-all" } }}
+                        customStyle={{ fontSize: "0.75rem", margin: 0 }}
+                      >
+                        {sql}
+                      </SyntaxHighlighter>
+                    </div>
+
+                    {/* Action */}
+                    <div className="px-2 py-1 flex items-center justify-center">
+                      <button
+                        className={`${diff.buttonClass} text-white px-2 py-1 rounded`}
+                        onClick={() => openModal(generateSQL(diff), diff)}
+                      >
+                        {diff.type === "DELETE" ? (
+                          <span className="flex items-center gap-1">
+                            <Trash2 size={16} />
+                            <span>from B</span>
+                          </span>
+                        ) : diff.type === "INSERT" ? (
+                          <span className="flex items-center gap-1">
+                            <Plus size={16} />
+                            <span>to B</span>
+                          </span>
+                        ) : diff.type === "UPDATE" ? (
+                          <span className="flex items-center gap-1">
+                            <Edit size={16} />
+                            <span>to B</span>
+                          </span>
+                        ) : null}
+                      </button>
+                    </div>
+                  </div>
+                );
+              }}
+            </List>
+          </div>
+          {/* End of body */}
+
+          <p className="mt-2 text-sm text-red-800 text-gray-600 dark:text-gray-300">
             Total differences: {rowDiff.length}
           </p>
           {/* Modal */}
