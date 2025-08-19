@@ -1,21 +1,25 @@
+// app/api/audit/route.js
 import dbPromise from "@/lib/db";
 
 export async function POST(req) {
   const body = await req.json();
+  console.log("Audit log request body:", body);
+
   const db = await dbPromise;
 
   await db.run(
     `INSERT INTO audit_log 
-      (db_type, env, table_name, operation_type, executed_sql, before_data, executed_by)
-      VALUES (?, ?, ?, ?, ?, ?, ?)`,
+      (db_type, env, db_name, table_name, operation_type, executed_sql, before_data, executed_by)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
     [
-      body.db_type,
+      body.dbType,        
       body.env,
-      body.table_name,
-      body.operation_type,
-      body.executed_sql,
-      JSON.stringify(body.before_data || {}),
-      body.executed_by,
+      body.dbName,       // 
+      body.tableName,
+      body.operationType,
+      body.query,         // executed_sql
+      JSON.stringify(body.beforeData || {}),
+      body.executedBy,
     ]
   );
 
