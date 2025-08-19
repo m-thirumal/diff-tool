@@ -27,7 +27,7 @@ export default function MultiSelectDropdown({ options, selectedValues, onChange 
   return (
   <div className="relative w-64" ref={dropdownRef}>
     <div
-      className="border px-3 py-2 rounded cursor-pointer bg-white dark:bg-gray-800 dark:border-gray-600"
+      className="border px-2 py-2 rounded cursor-pointer bg-white dark:bg-gray-800 dark:border-gray-600"
       onClick={() => setIsOpen(!isOpen)}
     >
       {selectedValues.length > 0 ? selectedValues.join(", ") : "Select column(s)"}
@@ -38,7 +38,7 @@ export default function MultiSelectDropdown({ options, selectedValues, onChange 
         {options.map((option) => (
           <label
             key={option}
-            className="flex items-center px-3 py-2 hover:bg-gray-100 dark:hover:bg-gray-700"
+            className="flex items-center px-2 py-2 hover:bg-gray-100 dark:hover:bg-gray-700"
           >
             <input
               type="checkbox"
