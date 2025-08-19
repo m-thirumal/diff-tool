@@ -1,3 +1,3 @@
 INSERT INTO document_status (status_name) VALUES
-('Final Review'),
-('Completed');
+(100, 'Final Review'),
+(101, 'Completed');
