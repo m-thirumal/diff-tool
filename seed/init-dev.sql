@@ -1,5 +1,4 @@
-INSERT INTO document_status (status_name) VALUES
-(6, 'On Hold'), -- for update
+INSERT INTO document_status (id, status_name) VALUES
 (7, 'In Progress'),
 (8, 'Submitted'),
 (9, 'Needs Changes'),
@@ -7,3 +6,4 @@ INSERT INTO document_status (status_name) VALUES
 (11, 'Cancelled'),
 (12, 'Under Review');
 
+UPDATE document_status SET status_name = 'On Hold' WHERE id = 6;

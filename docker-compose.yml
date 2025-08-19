@@ -6,7 +6,7 @@ services:
       context: .
       dockerfile: ${DOCKERFILE}
     ports:
-      - "3000:3000"
+      - "2214:2214"
     depends_on:
       - db_dev
       - db_prod

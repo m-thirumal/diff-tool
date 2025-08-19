@@ -5,7 +5,7 @@ CREATE TABLE IF NOT EXISTS document_status (
     end_time TIMESTAMP
 );
 
-INSERT INTO document_status (status_name) VALUES
+INSERT INTO document_status (id, status_name) VALUES
 (1, 'Draft'),
 (2, 'Pending Review'),
 (3, 'Approved'),

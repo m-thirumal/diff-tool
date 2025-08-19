@@ -7,5 +7,5 @@ RUN npm install --production && npm install -g npm@latest
 
 COPY . .
 
-EXPOSE 3000
+EXPOSE 2214
 CMD ["npm", "start"]
