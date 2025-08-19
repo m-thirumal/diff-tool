@@ -128,21 +128,25 @@ export default function SelectTablePage() {
   const fetchDiffs = async () => {
     if (!selectedTable || selectedColumns.length === 0 || primaryKeys.length === 0 || !selectedKeyColumn) return;
     setDiffLoading(true);
+    
+    const getPkValues = (row) =>
+      Object.fromEntries(primaryKeys.map((pk) => [pk, row[pk]]));
+
     try {
-      const resA = await fetch("/api/get-row-diff", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ dbType, ...envA, table: selectedTable }),
-      });
+      const [resA, resB] = await Promise.all([
+        fetch("/api/get-row-diff", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ dbType, ...envA, table: selectedTable }),
+        }),
+        fetch("/api/get-row-diff", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ dbType, ...envB, table: selectedTable }),
+        }),
+      ]);
 
-      const resB = await fetch("/api/get-row-diff", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ dbType, ...envB, table: selectedTable }),
-      });
-
-      const dataA = await resA.json();
-      const dataB = await resB.json();
+      const [dataA, dataB] = await Promise.all([resA.json(), resB.json()]);
       
       const rowsA = dataA.data || [];
       const rowsB = dataB.data || [];
@@ -157,7 +161,6 @@ export default function SelectTablePage() {
       const diffs = [];
 
       for (const [keyValue, rowA] of mapA.entries()) {
-        const pkValues = Object.fromEntries(primaryKeys.map(pk => [pk, rowA[pk]]));
         const rowB = mapB.get(keyValue);
         if (!rowB) {
             diffs.push({
@@ -166,7 +169,7 @@ export default function SelectTablePage() {
               row: rowA,
               buttonName: "INSERT to B",
               buttonClass: "bg-green-600 hover:bg-green-500", // Tailwind classes for green
-              pkValues
+              pkValues: getPkValues(rowA),
             });
         } else {
           const diffObjA = {};
@@ -182,28 +185,27 @@ export default function SelectTablePage() {
           });
 
           if (hasDiff) {
-                diffs.push({
-                  type: "UPDATE",
-                  key: keyValue,
-                  row: diffObjA,
-                  oldRow: diffObjB,
-                  buttonName: "UPDATE to B",
-                  buttonClass: "bg-yellow-600 hover:bg-yellow-500", // Tailwind classes for yellow
-                  pkValues
-                })
+            diffs.push({
+              type: "UPDATE",
+              key: keyValue,
+              row: diffObjA,
+              oldRow: diffObjB,
+              buttonName: "UPDATE to B",
+              buttonClass: "bg-yellow-600 hover:bg-yellow-500", // Tailwind classes for yellow
+              pkValues: getPkValues(rowA),
+            })
           }
         }
       }
       for (const [keyValue, rowB] of mapB.entries()) {
         if (!mapA.has(keyValue)) {
-          const pkValues = Object.fromEntries(primaryKeys.map(pk => [pk, rowB[pk]]));
           diffs.push({
             type: "DELETE",
             key: keyValue,
             oldRow: rowB, // showing what would be deleted
             buttonName: "DELETE from B",
             buttonClass: "bg-red-600 hover:bg-red-500", // Tailwind red for delete
-            pkValues
+            pkValues: getPkValues(rowB)
           });
         }
       }
