@@ -5,7 +5,9 @@ A web-based tool to compare database changes (DML) between **DEV** and **PRO** e
 ---
 
 ## 📌 Overview
-**Diff Tool** helps teams ensure database changes are synchronized between environments by generating and applying **DML differences**.  
+
+**Diff Tool** helps teams ensure database changes are synchronized between environments by generating and applying **DML differences**. 
+
 It supports both **PostgreSQL** and **MySQL**, and is designed to run entirely from the browser — no local DB client required.
 
 **Goal:** Quickly identify, review, and optionally execute the exact DML changes that will be applied to your production environment during deployment.
