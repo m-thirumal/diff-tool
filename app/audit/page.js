@@ -17,6 +17,7 @@ export default async function AuditPage() {
             <th className="px-2 py-2 border">ID</th>
             <th className="px-2 py-2 border">DB Type</th>
             <th className="px-2 py-2 border">Env</th>
+            <th className="px-2 py-2 border">Db Name</th>
             <th className="px-2 py-2 border">Table</th>
             <th className="px-2 py-2 border">Operation</th>
             <th className="px-2 py-2 border">Before Data</th>
@@ -31,6 +32,7 @@ export default async function AuditPage() {
               <td className="px-2 py-2 border text-center">{log.id}</td>
               <td className="px-2 py-2 border">{log.db_type}</td>
               <td className="px-2 py-2 border">{log.env}</td>
+              <td className="px-2 py-2 border">{log.db_name}</td>
               <td className="px-2 py-2 border">{log.table_name}</td>
               <td className="px-2 py-2 border">{log.operation_type}</td>
               <td className="px-2 py-2 border">{log.before_data}</td>

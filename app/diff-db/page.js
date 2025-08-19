@@ -35,14 +35,18 @@ export default function SelectTablePage() {
   const [isDarkMode, setIsDarkMode] = useState(false);
   //router
   const router = useRouter();
+  // Previous row snapshot for audit logging
+  const [selectedDiff, setSelectedDiff] = useState(null);
+
 
   useEffect(() => {
     setIsDarkMode(document.documentElement.classList.contains("dark"));
   }, []);
 
-  const openModal = (sql) => {
+  const openModal = (sql, diff) => {
     setSelectedSQL(sql);
     setIsModalOpen(true);
+    setSelectedDiff(diff); // <-- store the diff object too
   };
 
   useEffect(() => {
@@ -326,14 +330,15 @@ export default function SelectTablePage() {
           await logAudit({
               query: modifiedSQL,
               dbType,
-              executedBy: "UI",
+              executedBy: "Thirumal",
               env: envB.name, // or whichever env the change applied
-              tableName: extractTableName(modifiedSQL),
-              operationType: extractOperationType(modifiedSQL),
-              beforeData: previousRowSnapshot || {}
+              dbName: envB.db,
+              tableName: selectedTable,
+              operationType: selectedDiff?.type,
+              beforeData:  selectedDiff?.type === "INSERT" 
+                ? selectedDiff?.row 
+                : selectedDiff?.oldRow || {}
             });
-
-
           // Refresh table diff immediately
           await fetchDiffs();
           setIsModalOpen(false);
@@ -416,16 +421,16 @@ return (
         <button
           type="button"
           onClick={fetchDiffs}
-          className="bg-blue-600 hover:bg-blue-500 text-white px-5 py-1 rounded shadow"
+          className="bg-blue-600 hover:bg-blue-500 text-white px-2 py-1 rounded shadow"
         >
           Refresh
         </button>
-
+        {/* 🔹 Audit Logs Button */}
         <button
           onClick={() => router.push("/audit")}
-          className="bg-indigo-600 hover:bg-indigo-500 text-white px-4 py-2 rounded shadow"
+          className="bg-indigo-600 hover:bg-indigo-900 text-white px-2 py-2 rounded shadow"
         >
-          View Audit Logs
+          Audit Logs
         </button>
 
       </div>
@@ -442,7 +447,7 @@ return (
               <tr>
                 {/* <th className="px-4 py-2 border dark:border-gray-600 min-w-[60px]">Type</th> */}
                 <th className="px-4 py-2 border dark:border-gray-600 min-w-[120px]">
-                  Key ({primaryKeys.join(", ")})
+                  PK ({primaryKeys.join(", ")})
                 </th>
                 <th className="px-4 py-2 border dark:border-gray-600 min-w-[300px]">{envA ? envA.name : "Env A"}</th>
                 <th className="px-4 py-2 border dark:border-gray-600 min-w-[300px]">{envB ? envB.name : "Env B"}</th>
@@ -543,7 +548,7 @@ return (
                   </td>
                   <td className="px-4 py-2 border dark:border-gray-700 text-xs whitespace-pre-wrap break-all font-mono dark:text-indigo-300">
                     <button className={`${diff.buttonClass} text-white px-2 py-2 rounded`}
-                    onClick={() => openModal(generateSQL(diff))}>
+                    onClick={() => openModal(generateSQL(diff), diff)}>
                        {diff.type === "DELETE" ? (
                           <span className="flex items-center gap-1">
                             <Trash2 size={16} />
