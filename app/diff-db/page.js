@@ -573,7 +573,7 @@ return (
             </tbody>
           </table>*/}
           {/* Header */}
-          <div className="grid grid-cols-[140px_300px_300px_300px_130px] bg-green-900 text-white sticky top-0 z-10">
+          <div className="grid grid-cols-[140px_350px_350px_475px_100px] bg-green-900 text-white sticky top-0 z-10">
 
             <div className="px-2 py-1 border-r dark:border-gray-600 flex items-center justify-center text-center">
               PK {primaryKeys.join(", ")}
@@ -586,8 +586,9 @@ return (
               {envB ? envB.name : "Env B"}
               <div className="text-xs text-gray-200">Rows: {rowBCount ?? "—"}</div>
             </div>
-            <div className="px-2 py-1 border-r dark:border-gray-600 flex items-center justify-center text-center">
-              SQL
+            <div className="px-2 py-1 border-r dark:border-gray-600 items-center justify-center text-center">
+              SQL 
+              <div className="text-xs text-gray-200">Diff: {rowDiff.length}</div>
             </div>
             <div className="px-2 py-1 flex items-center justify-center text-center">
               Action
@@ -599,7 +600,7 @@ return (
           {/* Virtualized body */}
           <div className="border border-gray-300 dark:border-gray-600 border-t-0">
             <List
-              height={600} // viewport height
+              height={575} // viewport height
               itemCount={rowDiff.length}
               itemSize={200} // fixed row height, tweak as needed
               width={"100%"}
@@ -615,7 +616,9 @@ return (
                   <div
                     key={index}
                     style={style}
-                    className="grid grid-cols-[140px_300px_300px_300px_130px] border-t dark:border-gray-700 text-xs"
+                    className={`grid grid-cols-[140px_350px_350px_475px_100px] border-t dark:border-gray-700 text-xs ${
+                      index === rowDiff.length - 1 ? "border-b" : ""
+                    }`}
                   >
                     {/* PK */}
                     <div className="px-2 py-1 break-all whitespace-pre-wrap border-r dark:border-gray-700">
@@ -694,10 +697,6 @@ return (
             </List>
           </div>
           {/* End of body */}
-
-          <p className="mt-2 text-sm text-red-800 text-gray-600 dark:text-gray-300">
-            Total differences: {rowDiff.length}
-          </p>
           {/* Modal */}
           <Modal 
             isOpen={isModalOpen} 
