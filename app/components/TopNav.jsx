@@ -1,7 +1,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { Home, ArrowLeft, ClipboardList  } from "lucide-react";
+import { Home, ArrowLeft, ClipboardList, LogOut  } from "lucide-react";
 
 export default function TopNav({ title }) {
   const router = useRouter();
@@ -11,7 +11,7 @@ export default function TopNav({ title }) {
       <div className="flex items-center gap-3">
         {/* Home Button */}
         <button
-          onClick={() => router.push("/")}
+          onClick={() => router.push("/environment")}
           className="flex items-center gap-2 rounded-lg bg-indigo-500 text-white px-3 py-2 text-sm font-medium hover:bg-indigo-700 transition"        >
           <Home size={18} />
           Home
@@ -37,6 +37,14 @@ export default function TopNav({ title }) {
           onClick={() => router.back()}
           className="flex items-center gap-2 rounded-lg bg-indigo-500 text-white px-3 py-2 text-sm font-medium hover:bg-indigo-700 transition">          <ArrowLeft size={18} />
           Back
+        </button>
+      {/* Logout Button */}
+       <button
+          onClick={() => router.push("/")}
+          className="flex items-center gap-2 rounded-lg bg-indigo-500 text-white px-3 py-2 text-sm font-medium hover:bg-indigo-700 transition"
+        >
+          <LogOut size={18} />
+          Logout
         </button>
 
  
