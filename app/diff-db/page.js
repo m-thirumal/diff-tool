@@ -4,11 +4,12 @@ import { FixedSizeList as List } from "react-window";
 import { useDb } from "../context/DbContext";
 import MultiSelectDropdown from "../components/MultiSelectDropdown";
 import Modal from "../components/Modal";
-import { Trash2, Plus, Edit } from "lucide-react";
+import { RotateCcw, Trash2, Plus, Edit } from "lucide-react";
 import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
 import { oneDark, oneLight } from 'react-syntax-highlighter/dist/esm/styles/prism';
 import { logAudit } from "../utils/audit"; 
-import { useRouter } from "next/navigation"; 
+import { useRouter } from "next/navigation";
+import TopNav from "../components/TopNav"; 
 
 
 export default function SelectTablePage() {
@@ -344,9 +345,8 @@ export default function SelectTablePage() {
   };
 
 return (
-  <div className="p-1 font-sans">
-  <h1 className="text-xl font-bold mb-2">Select Common Table</h1>
-  
+  <div className="font-sans">
+  <TopNav title="Select Common Table" />  
   {loading ? (
     <p>Loading tables...</p>
   ) : tables.length === 0 ? (
@@ -412,14 +412,18 @@ return (
         <button
           type="button"
           onClick={fetchDiffs}
-          className="bg-blue-600 hover:bg-blue-500 text-white px-2 py-1 rounded shadow"
+          title="Refresh"  //native hover tooltip
         >
-          Refresh
+          <RotateCcw
+            size={22}
+            className="cursor-pointer text-blue-600 hover:text-blue-500 transition"
+            onClick={fetchDiffs}
+          />
         </button>
         {/* 🔹 Audit Logs Button */}
         <button
           onClick={() => router.push("/audit")}
-          className="bg-indigo-600 hover:bg-indigo-900 text-white px-2 py-2 rounded shadow"
+          className="bg-indigo-600 hover:bg-indigo-900 text-white px-2 py-1 rounded shadow"
         >
           Audit Logs
         </button>
