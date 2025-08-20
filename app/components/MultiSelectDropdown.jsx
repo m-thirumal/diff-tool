@@ -34,11 +34,13 @@ export default function MultiSelectDropdown({ options, selectedValues, onChange 
     </div>
 
     {isOpen && (
-      <div className="absolute left-0 right-0 z-[999] mt-1 max-h-60 overflow-auto border rounded bg-white dark:bg-gray-900 dark:border-gray-700 shadow-lg">
+      <div className="absolute left-0 right-0 z-[999] mt-1 max-h-60 overflow-auto border
+       rounded bg-white dark:bg-gray-900 dark:border-gray-700 shadow-lg"
+       >
         {options.map((option) => (
           <label
             key={option}
-            className="flex items-center px-2 py-2 hover:bg-gray-100 dark:hover:bg-gray-700"
+            className="flex items-center px-2 py-1 hover:bg-gray-100 dark:hover:bg-gray-700"
           >
             <input
               type="checkbox"

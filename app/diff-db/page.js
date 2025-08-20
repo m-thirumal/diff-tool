@@ -344,8 +344,8 @@ export default function SelectTablePage() {
   };
 
 return (
-  <div className="p-2 font-sans">
-  <h1 className="text-xl font-bold mb-4">Select Common Table</h1>
+  <div className="p-1 font-sans">
+  <h1 className="text-xl font-bold mb-2">Select Common Table</h1>
   
   {loading ? (
     <p>Loading tables...</p>
@@ -353,7 +353,8 @@ return (
     <p className="text-red-500">No common tables found.</p>
   ) : (
     <>
-      <div className="mb-4 flex items-center gap-6 sticky top-0 z-10 bg-white dark:bg-gray-900 py-1 px-2 shadow">
+      {/* 🔹 Filter with dropdowns and buttons */}
+      <div className="mb-4 flex items-center gap-6 sticky top-0 z-30 bg-white dark:bg-gray-900  h-12 px-2 shadow">
         {/* Table Dropdown */}
         <div>
           <label htmlFor="tableSelect" className="font-medium mr-2">Table:</label>
@@ -390,7 +391,7 @@ return (
         </div>
 
         {/* Column Dropdown */}
-        <div className="flex items-center gap-2 relative z-20">
+        <div className="flex items-center gap-2 relative z-50 overflow-visible">
           <label htmlFor="columnSelect" className="font-medium">
             Compare Column (Optional):
           </label>
@@ -431,151 +432,10 @@ return (
       ) : rowDiff.length === 0 ? (
         <p className="text-green-600">No differences found.</p>
       ) : (
-        <div className="mt-6 max-w-full overflow-x-auto">
-          {/*<table className="min-w-full border border-gray-300 dark:border-gray-600 table-auto z-10">
-            <thead className="bg-green-900 text-white sticky top-0 z-0">
-              <tr>
-                <th className="px-2 py-1 border dark:border-gray-600 min-w-[120px]">
-                  PK {primaryKeys.join(", ")}
-                </th>
-                <th className="px-2 py-1 border dark:border-gray-600 min-w-[300px]">
-                  {envA ? envA.name : "Env A"}
-                  <div className="text-xs text-gray-200">
-                    Rows: {rowACount ?? "—"}
-                  </div>
-                </th>
-                <th className="px-2 py-1 border dark:border-gray-600 min-w-[300px]">
-                  {envB ? envB.name : "Env B"}
-                  <div className="text-xs text-gray-200">
-                    Rows: {rowBCount ?? "—"}
-                  </div>
-                </th>
-                <th className="px-2 py-1 border dark:border-gray-600 min-w-[300px]">SQL</th>
-                <th className="px-2 py-1 border dark:border-gray-600 min-w-[130px]">Action</th>
-              </tr>
-            </thead>
-            <tbody className="bg-white dark:bg-gray-800 text-black dark:text-gray-100">
-              {rowDiff.map((diff, index) => {
-                const sql = generateSQL(diff);
-                const rowJson = JSON.stringify(diff.row, null, 2);
-                const oldRowJson = diff.oldRow ? JSON.stringify(diff.oldRow, null, 2) : "—";
-                return (
-                  <tr key={index} className="border-t dark:border-gray-700">            
-                    <td className="px-4 py-2 border dark:border-gray-700 text-xs break-all whitespace-pre-wrap">
-                      {diff.key}
-                    </td>
-                    <td className="px-4 py-2 border dark:border-gray-700 text-xs break-all whitespace-pre-wrap font-mono text-green-700 dark:text-green-400">
-                      <div className="overflow-x-auto">
-                        <SyntaxHighlighter
-                          language="json"
-                          style={isDarkMode ? oneDark : oneLight}
-                          wrapLongLines={true}
-                          PreTag="div" // <- important: replaces <pre> so white-space rules can apply
-                          codeTagProps={{
-                            style: {
-                              whiteSpace: "pre-wrap",
-                              wordBreak: "break-all",
-                              overflowWrap: "break-word",
-                            },
-                          }}
-                          customStyle={{
-                            fontSize: "0.75rem",
-                            borderRadius: "0.5rem",
-                            whiteSpace: "pre-wrap",
-                            wordBreak: "break-all",
-                            overflowWrap: "break-word",
-                            margin: 0,
-                          }}
-                        >
-                          {rowJson}
-                        </SyntaxHighlighter>
-                      </div>
-                    </td>
-                    <td className="px-4 py-2 border dark:border-gray-700 text-xs break-all whitespace-pre-wrap font-mono text-red-700 dark:text-red-400">
-                      <div className="overflow-x-auto">
-                        <SyntaxHighlighter
-                          language="json"
-                          style={isDarkMode ? oneDark : oneLight}
-                          wrapLongLines={true}
-                          PreTag="div" // <- important: replaces <pre> so white-space rules can apply
-                          codeTagProps={{
-                            style: {
-                              whiteSpace: "pre-wrap",
-                              wordBreak: "break-all",
-                              overflowWrap: "break-word",
-                            },
-                          }}
-                          customStyle={{
-                            fontSize: "0.75rem",
-                            borderRadius: "0.5rem",
-                            whiteSpace: "pre-wrap",
-                            wordBreak: "break-all",
-                            overflowWrap: "break-word",
-                            margin: 0,
-                          }}
-                        >
-                          {oldRowJson}
-                        </SyntaxHighlighter>
-                      </div>
-                    </td>
-                    <td className="px-4 py-2 border dark:border-gray-700 text-xs whitespace-pre-wrap break-all font-mono dark:text-indigo-300">
-                      <div className="overflow-x-auto">
-                        <SyntaxHighlighter
-                          language="sql"
-                          style={isDarkMode ? oneDark : oneLight}
-                          wrapLongLines={true}
-                          PreTag="div" // <- important: replaces <pre> so white-space rules can apply
-                          codeTagProps={{
-                            style: {
-                              whiteSpace: "pre-wrap",
-                              wordBreak: "break-all",
-                              overflowWrap: "break-word",
-                            },
-                          }}
-                          customStyle={{
-                            fontSize: "0.75rem",
-                            borderRadius: "0.5rem",
-                            whiteSpace: "pre-wrap",
-                            wordBreak: "break-all",
-                            overflowWrap: "break-word",
-                            margin: 0,
-                          }}
-                        >
-                          {sql}
-                        </SyntaxHighlighter>
-                      </div>
-                      
-                    </td>
-                    <td className="px-4 py-2 border dark:border-gray-700 text-xs whitespace-pre-wrap break-all font-mono dark:text-indigo-300">
-                      <button className={`${diff.buttonClass} text-white px-2 py-2 rounded`}
-                      onClick={() => openModal(generateSQL(diff), diff)}>
-                        {diff.type === "DELETE" ? (
-                            <span className="flex items-center gap-1">
-                              <Trash2 size={16} />
-                              <span>from B</span>
-                            </span>
-                          ) : diff.type === "INSERT" ? (
-                            <span className="flex items-center gap-1">
-                              <Plus size={16} />
-                              <span>to B</span>
-                            </span>
-                          ) : diff.type === "UPDATE" ? (
-                            <span className="flex items-center gap-1">
-                              <Edit size={16} />
-                              <span>to B</span>
-                            </span>
-                          ) : null}
-                      </button>
-                    </td>
-                  </tr>
-                );
-        })}
-            </tbody>
-          </table>*/}
+        <div className="mt-2 max-w-full overflow-x-auto">
           {/* Header */}
           <div className="grid grid-cols-[minmax(80px,1fr)_minmax(120px,2fr)_minmax(120px,2fr)_minmax(150px,3fr)_minmax(80px,1fr)]
- bg-green-900 text-white sticky top-0 z-10">
-
+             bg-green-900 text-white sticky top-0 z-20">
             <div className="px-2 py-1 border-r dark:border-gray-600 flex items-center justify-center text-center">
               PK {primaryKeys.join(", ")}
             </div>
