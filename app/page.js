@@ -10,7 +10,6 @@ export default function Home() {
   const [dbType, setDbType] = useState(payload.dbType);
   const [envA, setEnvA] = useState(payload.envA);
   const [envB, setEnvB] = useState(payload.envB);
-  const dbTypes = ["MySQL", "PostgreSQL"];
 
   const handleEnvChange = (setEnv, field, value) => {
     setEnv((prev) => ({ ...prev, [field]: value }));
