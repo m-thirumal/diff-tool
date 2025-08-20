@@ -1,5 +1,6 @@
 // app/audit/page.jsx
 import dbPromise from "@/lib/db";
+import TopNav from "../components/TopNav";
 
 export default async function AuditPage() {
   const db = await dbPromise;
@@ -9,8 +10,8 @@ export default async function AuditPage() {
   `);
 
   return (
-    <div className="p-6">
-      <h1 className="text-2xl font-bold mb-4">Audit Logs</h1>
+    <div className="font-sans">
+      <TopNav title="Audit Logs" />
         {/* Table wrapper for horizontal scroll */}
       <div className="overflow-x-auto">
         <table className="min-w-full border border-gray-300 dark:border-gray-600 table-auto text-sm">
