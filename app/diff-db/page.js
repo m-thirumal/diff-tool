@@ -573,7 +573,8 @@ return (
             </tbody>
           </table>*/}
           {/* Header */}
-          <div className="grid grid-cols-[140px_350px_350px_475px_100px] bg-green-900 text-white sticky top-0 z-10">
+          <div className="grid grid-cols-[minmax(80px,1fr)_minmax(120px,2fr)_minmax(120px,2fr)_minmax(150px,3fr)_minmax(80px,1fr)]
+ bg-green-900 text-white sticky top-0 z-10">
 
             <div className="px-2 py-1 border-r dark:border-gray-600 flex items-center justify-center text-center">
               PK {primaryKeys.join(", ")}
@@ -616,7 +617,8 @@ return (
                   <div
                     key={index}
                     style={style}
-                    className={`grid grid-cols-[140px_350px_350px_475px_100px] border-t dark:border-gray-700 text-xs ${
+                    className={`grid grid-cols-[minmax(80px,1fr)_minmax(120px,2fr)_minmax(120px,2fr)_minmax(150px,3fr)_minmax(80px,1fr)]
+ border-t dark:border-gray-700 text-xs ${
                       index === rowDiff.length - 1 ? "border-b" : ""
                     }`}
                   >
