@@ -35,13 +35,47 @@ export default function Home() {
   return (
    <div className="p-8 font-sans">
       <center><h1 className="text-2xl font-bold mb-6">Database Comparison Tool</h1></center>
-      <div className="mb-8">
-        <label className="font-medium" htmlFor="dbType">Select Database Type:</label>
-        <select className="ml-4 border border-gray-300 rounded px-2 py-0 bg-white text-black dark:bg-gray-800 dark:text-white dark:border-gray-600" value={dbType} onChange={e => setDbType(e.target.value)}>
-          {dbTypes.map(type => (
-            <option key={type}>{type}</option>
-          ))}
-        </select>
+     <div className="mb-8 flex items-center gap-6">
+         {/* Label on the same line */}
+        <label className="font-medium" htmlFor="dbType">
+          Select Database:
+        </label>
+         {/* Options */}
+        <div className="flex gap-6">
+          {/* PostgreSQL Option */}
+          <label className="flex items-center space-x-2 cursor-pointer">
+            <input
+              type="radio"
+              name="dbType"
+              value="PostgreSQL"
+              checked={dbType === "PostgreSQL"}
+              onChange={e => setDbType(e.target.value)}
+              className="accent-indigo-600"
+            />
+            <img
+              src="/icons/postgresql.svg"
+              alt="PostgreSQL"
+              className="w-35 h-10"
+            />
+          </label>
+
+          {/* MySQL Option */}
+          <label className="flex items-center space-x-2 cursor-pointer">
+            <input
+              type="radio"
+              name="dbType"
+              value="MySQL"
+              checked={dbType === "MySQL"}
+              onChange={e => setDbType(e.target.value)}
+              className="accent-indigo-600"
+            />
+            <img
+              src="/icons/mysql.svg"
+              alt="MySQL"
+              className="w-20 h-10"
+            />
+          </label>
+        </div>
       </div>
       <hr />
       <div className="flex flex-col md:flex-row gap-12">
