@@ -2,7 +2,6 @@
 
 A web-based tool to compare database changes (DML) between **DEV** and **PRO** environments during release, with direct execution, logging, and multi-database support.
 
----
 
 ## 📌 Overview
 
@@ -12,7 +11,6 @@ It supports both **PostgreSQL** and **MySQL**, and is designed to run entirely f
 
 **Goal:** Quickly identify, review, and optionally execute the exact DML changes that will be applied to your production environment during deployment.
 
----
 
 ## 🎥 Demo
 
