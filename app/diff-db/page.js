@@ -1,5 +1,6 @@
 "use client";
 import { useEffect, useState } from "react";
+import { FixedSizeList as List } from "react-window";
 import { useDb } from "../context/DbContext";
 import MultiSelectDropdown from "../components/MultiSelectDropdown";
 import Modal from "../components/Modal";
@@ -128,21 +129,25 @@ export default function SelectTablePage() {
   const fetchDiffs = async () => {
     if (!selectedTable || selectedColumns.length === 0 || primaryKeys.length === 0 || !selectedKeyColumn) return;
     setDiffLoading(true);
+    
+    const getPkValues = (row) =>
+      Object.fromEntries(primaryKeys.map((pk) => [pk, row[pk]]));
+
     try {
-      const resA = await fetch("/api/get-row-diff", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ dbType, ...envA, table: selectedTable }),
-      });
+      const [resA, resB] = await Promise.all([
+        fetch("/api/get-row-diff", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ dbType, ...envA, table: selectedTable }),
+        }),
+        fetch("/api/get-row-diff", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ dbType, ...envB, table: selectedTable }),
+        }),
+      ]);
 
-      const resB = await fetch("/api/get-row-diff", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ dbType, ...envB, table: selectedTable }),
-      });
-
-      const dataA = await resA.json();
-      const dataB = await resB.json();
+      const [dataA, dataB] = await Promise.all([resA.json(), resB.json()]);
       
       const rowsA = dataA.data || [];
       const rowsB = dataB.data || [];
@@ -157,7 +162,6 @@ export default function SelectTablePage() {
       const diffs = [];
 
       for (const [keyValue, rowA] of mapA.entries()) {
-        const pkValues = Object.fromEntries(primaryKeys.map(pk => [pk, rowA[pk]]));
         const rowB = mapB.get(keyValue);
         if (!rowB) {
             diffs.push({
@@ -166,7 +170,7 @@ export default function SelectTablePage() {
               row: rowA,
               buttonName: "INSERT to B",
               buttonClass: "bg-green-600 hover:bg-green-500", // Tailwind classes for green
-              pkValues
+              pkValues: getPkValues(rowA),
             });
         } else {
           const diffObjA = {};
@@ -182,28 +186,27 @@ export default function SelectTablePage() {
           });
 
           if (hasDiff) {
-                diffs.push({
-                  type: "UPDATE",
-                  key: keyValue,
-                  row: diffObjA,
-                  oldRow: diffObjB,
-                  buttonName: "UPDATE to B",
-                  buttonClass: "bg-yellow-600 hover:bg-yellow-500", // Tailwind classes for yellow
-                  pkValues
-                })
+            diffs.push({
+              type: "UPDATE",
+              key: keyValue,
+              row: diffObjA,
+              oldRow: diffObjB,
+              buttonName: "UPDATE to B",
+              buttonClass: "bg-yellow-600 hover:bg-yellow-500", // Tailwind classes for yellow
+              pkValues: getPkValues(rowA),
+            })
           }
         }
       }
       for (const [keyValue, rowB] of mapB.entries()) {
         if (!mapA.has(keyValue)) {
-          const pkValues = Object.fromEntries(primaryKeys.map(pk => [pk, rowB[pk]]));
           diffs.push({
             type: "DELETE",
             key: keyValue,
             oldRow: rowB, // showing what would be deleted
             buttonName: "DELETE from B",
             buttonClass: "bg-red-600 hover:bg-red-500", // Tailwind red for delete
-            pkValues
+            pkValues: getPkValues(rowB)
           });
         }
       }
@@ -221,14 +224,12 @@ export default function SelectTablePage() {
   }, [selectedColumns, selectedTable, primaryKeys, selectedKeyColumn]);
 
   function generateSQL(diff) {
-    console.log("Generating SQL for diff:", diff);
     if (!diff || (!diff.row && !diff.oldRow)) return "";
 
     const newRow = diff.row;
     const oldRow = diff.oldRow || {};
 
     if (diff.type.startsWith("INSERT")) {
-      console.log("Generating INSERT SQL for diff:", diff);
       const keys = Object.keys(newRow).join(", ");
       const values = Object.values(newRow)
         .map((v) => sqlValueFormatter(v))
@@ -237,7 +238,6 @@ export default function SelectTablePage() {
     }
 
     if (diff.type.startsWith("UPDATE")) {
-      console.log("Generating UPDATE SQL for diff:", diff);
       const setClause = Object.entries(newRow)
         .map(([k, v]) => `${k}=${sqlValueFormatter(v)}`)
         .join(", ");
@@ -259,7 +259,6 @@ export default function SelectTablePage() {
     }
 
     if (diff.type.startsWith("DELETE")) {
-      console.log("Generating DELETE SQL for diff:", diff);
       const whereClause = diff.pkValues
         ? Object.entries(diff.pkValues)
             .map(([pk, val]) => {
@@ -271,7 +270,6 @@ export default function SelectTablePage() {
             })
             .join(" AND ")
         : "-- Missing PK values";
-      console.log("Where clause:", whereClause);
       return `DELETE FROM ${selectedTable} WHERE ${whereClause};`;
     }
 
@@ -346,8 +344,8 @@ export default function SelectTablePage() {
   };
 
 return (
-  <div className="p-2 font-sans">
-  <h1 className="text-xl font-bold mb-4">Select Common Table</h1>
+  <div className="p-1 font-sans">
+  <h1 className="text-xl font-bold mb-2">Select Common Table</h1>
   
   {loading ? (
     <p>Loading tables...</p>
@@ -355,7 +353,8 @@ return (
     <p className="text-red-500">No common tables found.</p>
   ) : (
     <>
-      <div className="mb-4 flex items-center gap-6 sticky top-0 z-10 bg-white dark:bg-gray-900 py-1 px-2 shadow">
+      {/* 🔹 Filter with dropdowns and buttons */}
+      <div className="mb-4 flex items-center gap-6 sticky top-0 z-30 bg-white dark:bg-gray-900  h-12 px-2 shadow">
         {/* Table Dropdown */}
         <div>
           <label htmlFor="tableSelect" className="font-medium mr-2">Table:</label>
@@ -392,7 +391,7 @@ return (
         </div>
 
         {/* Column Dropdown */}
-        <div className="flex items-center gap-2 relative z-20">
+        <div className="flex items-center gap-2 relative z-50 overflow-visible">
           <label htmlFor="columnSelect" className="font-medium">
             Compare Column (Optional):
           </label>
@@ -433,125 +432,110 @@ return (
       ) : rowDiff.length === 0 ? (
         <p className="text-green-600">No differences found.</p>
       ) : (
-        <div className="mt-6 max-w-full overflow-x-auto">
-          <table className="min-w-full border border-gray-300 dark:border-gray-600 table-auto z-10">
-            <thead className="bg-green-900 text-white sticky top-0 z-0">
-              <tr>
-                {/* <th className="px-4 py-2 border dark:border-gray-600 min-w-[60px]">Type</th> */}
-                <th className="px-2 py-1 border dark:border-gray-600 min-w-[120px]">
-                  PK {primaryKeys.join(", ")}
-                </th>
-                <th className="px-2 py-1 border dark:border-gray-600 min-w-[300px]">
-                  {envA ? envA.name : "Env A"}
-                  <div className="text-xs text-gray-200">
-                    Rows: {rowACount ?? "—"}
-                  </div>
-                </th>
-                <th className="px-2 py-1 border dark:border-gray-600 min-w-[300px]">
-                  {envB ? envB.name : "Env B"}
-                  <div className="text-xs text-gray-200">
-                    Rows: {rowBCount ?? "—"}
-                  </div>
-                </th>
-                <th className="px-2 py-1 border dark:border-gray-600 min-w-[300px]">SQL</th>
-                <th className="px-2 py-1 border dark:border-gray-600 min-w-[130px]">Action</th>
-              </tr>
-            </thead>
-            <tbody className="bg-white dark:bg-gray-800 text-black dark:text-gray-100">
-              {rowDiff.map((diff, index) => (
-                <tr key={index} className="border-t dark:border-gray-700">
-                  {/* <td className="px-4 py-2 border dark:border-gray-700 text-xs break-words whitespace-pre-wrap">
-                    {diff.type}
-                  </td> */}
-                  <td className="px-4 py-2 border dark:border-gray-700 text-xs break-all whitespace-pre-wrap">
-                    {diff.key}
-                  </td>
-                  <td className="px-4 py-2 border dark:border-gray-700 text-xs break-all whitespace-pre-wrap font-mono text-green-700 dark:text-green-400">
-                    <div className="overflow-x-auto">
+        <div className="mt-2 max-w-full overflow-x-auto">
+          {/* Header */}
+          <div className="grid grid-cols-[minmax(80px,1fr)_minmax(120px,2fr)_minmax(120px,2fr)_minmax(150px,3fr)_minmax(80px,1fr)]
+             bg-green-900 text-white sticky top-0 z-20">
+            <div className="px-2 py-1 border-r dark:border-gray-600 flex items-center justify-center text-center">
+              PK {primaryKeys.join(", ")}
+            </div>
+            <div className="px-2 py-1 border-r dark:border-gray-600 text-center">
+              {envA ? envA.name : "Env A"}
+              <div className="text-xs text-gray-200">Rows: {rowACount ?? "—"}</div>
+            </div>
+            <div className="px-2 py-1 border-r dark:border-gray-600 text-center">
+              {envB ? envB.name : "Env B"}
+              <div className="text-xs text-gray-200">Rows: {rowBCount ?? "—"}</div>
+            </div>
+            <div className="px-2 py-1 border-r dark:border-gray-600 items-center justify-center text-center">
+              SQL 
+              <div className="text-xs text-gray-200">Diff: {rowDiff.length}</div>
+            </div>
+            <div className="px-2 py-1 flex items-center justify-center text-center">
+              Action
+            </div>
+          </div>
+
+          {/* End of header */}
+          {/* Body */}
+          {/* Virtualized body */}
+          <div className="border border-gray-300 dark:border-gray-600 border-t-0">
+            <List
+              height={575} // viewport height
+              itemCount={rowDiff.length}
+              itemSize={200} // fixed row height, tweak as needed
+              width={"100%"}
+              className="border border-t-0 border-gray-300 dark:border-gray-600"
+            >
+              {({ index, style }) => {
+                const diff = rowDiff[index];
+                const sql = generateSQL(diff);
+                const rowJson = JSON.stringify(diff.row, null, 2);
+                const oldRowJson = diff.oldRow ? JSON.stringify(diff.oldRow, null, 2) : "—";
+
+                return (
+                  <div
+                    key={index}
+                    style={style}
+                    className={`grid grid-cols-[minmax(80px,1fr)_minmax(120px,2fr)_minmax(120px,2fr)_minmax(150px,3fr)_minmax(80px,1fr)]
+ border-t dark:border-gray-700 text-xs ${
+                      index === rowDiff.length - 1 ? "border-b" : ""
+                    }`}
+                  >
+                    {/* PK */}
+                    <div className="px-2 py-1 break-all whitespace-pre-wrap border-r dark:border-gray-700">
+                      {diff.key}
+                    </div>
+
+                    {/* Env A */}
+                    <div className="px-2 py-1 border-r dark:border-gray-700 font-mono text-green-700 dark:text-green-400 overflow-x-auto">
                       <SyntaxHighlighter
                         language="json"
                         style={isDarkMode ? oneDark : oneLight}
-                        wrapLongLines={true}
-                        PreTag="div" // <- important: replaces <pre> so white-space rules can apply
-                        codeTagProps={{
-                          style: {
-                            whiteSpace: "pre-wrap",
-                            wordBreak: "break-all",
-                            overflowWrap: "break-word",
-                          },
-                        }}
-                        customStyle={{
-                          fontSize: "0.75rem",
-                          borderRadius: "0.5rem",
-                          whiteSpace: "pre-wrap",
-                          wordBreak: "break-all",
-                          overflowWrap: "break-word",
-                          margin: 0,
-                        }}
+                        wrapLongLines
+                        PreTag="div"
+                        codeTagProps={{ style: { whiteSpace: "pre-wrap", wordBreak: "break-all" } }}
+                        customStyle={{ fontSize: "0.75rem", margin: 0 }}
                       >
-                        {JSON.stringify(diff.row, null, 2)}
+                        {rowJson}
                       </SyntaxHighlighter>
                     </div>
-                  </td>
-                  <td className="px-4 py-2 border dark:border-gray-700 text-xs break-all whitespace-pre-wrap font-mono text-red-700 dark:text-red-400">
-                    <div className="overflow-x-auto">
+
+                    {/* Env B */}
+                    <div className="px-2 py-1 border-r dark:border-gray-700 font-mono text-red-700 dark:text-red-400 overflow-x-auto">
                       <SyntaxHighlighter
                         language="json"
                         style={isDarkMode ? oneDark : oneLight}
-                        wrapLongLines={true}
-                        PreTag="div" // <- important: replaces <pre> so white-space rules can apply
-                        codeTagProps={{
-                          style: {
-                            whiteSpace: "pre-wrap",
-                            wordBreak: "break-all",
-                            overflowWrap: "break-word",
-                          },
-                        }}
-                        customStyle={{
-                          fontSize: "0.75rem",
-                          borderRadius: "0.5rem",
-                          whiteSpace: "pre-wrap",
-                          wordBreak: "break-all",
-                          overflowWrap: "break-word",
-                          margin: 0,
-                        }}
+                        wrapLongLines
+                        PreTag="div"
+                        codeTagProps={{ style: { whiteSpace: "pre-wrap", wordBreak: "break-all" } }}
+                        customStyle={{ fontSize: "0.75rem", margin: 0 }}
                       >
-                        {diff.oldRow ? JSON.stringify(diff.oldRow, null, 2) : "—"}
+                        {oldRowJson}
                       </SyntaxHighlighter>
                     </div>
-                  </td>
-                  <td className="px-4 py-2 border dark:border-gray-700 text-xs whitespace-pre-wrap break-all font-mono dark:text-indigo-300">
-                    <div className="overflow-x-auto">
+
+                    {/* SQL */}
+                    <div className="px-2 py-1 border-r dark:border-gray-700 font-mono dark:text-indigo-300 overflow-x-auto">
                       <SyntaxHighlighter
                         language="sql"
                         style={isDarkMode ? oneDark : oneLight}
-                        wrapLongLines={true}
-                        PreTag="div" // <- important: replaces <pre> so white-space rules can apply
-                        codeTagProps={{
-                          style: {
-                            whiteSpace: "pre-wrap",
-                            wordBreak: "break-all",
-                            overflowWrap: "break-word",
-                          },
-                        }}
-                        customStyle={{
-                          fontSize: "0.75rem",
-                          borderRadius: "0.5rem",
-                          whiteSpace: "pre-wrap",
-                          wordBreak: "break-all",
-                          overflowWrap: "break-word",
-                          margin: 0,
-                        }}
+                        wrapLongLines
+                        PreTag="div"
+                        codeTagProps={{ style: { whiteSpace: "pre-wrap", wordBreak: "break-all" } }}
+                        customStyle={{ fontSize: "0.75rem", margin: 0 }}
                       >
-                        {generateSQL(diff)}
+                        {sql}
                       </SyntaxHighlighter>
                     </div>
-                    
-                  </td>
-                  <td className="px-4 py-2 border dark:border-gray-700 text-xs whitespace-pre-wrap break-all font-mono dark:text-indigo-300">
-                    <button className={`${diff.buttonClass} text-white px-2 py-2 rounded`}
-                    onClick={() => openModal(generateSQL(diff), diff)}>
-                       {diff.type === "DELETE" ? (
+
+                    {/* Action */}
+                    <div className="px-2 py-1 flex items-center justify-center">
+                      <button
+                        className={`${diff.buttonClass} text-white px-2 py-1 rounded`}
+                        onClick={() => openModal(generateSQL(diff), diff)}
+                      >
+                        {diff.type === "DELETE" ? (
                           <span className="flex items-center gap-1">
                             <Trash2 size={16} />
                             <span>from B</span>
@@ -567,15 +551,14 @@ return (
                             <span>to B</span>
                           </span>
                         ) : null}
-                    </button>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-          <p className="mt-2 text-sm text-gray-600 dark:text-gray-300">
-            Total differences: {rowDiff.length}
-          </p>
+                      </button>
+                    </div>
+                  </div>
+                );
+              }}
+            </List>
+          </div>
+          {/* End of body */}
           {/* Modal */}
           <Modal 
             isOpen={isModalOpen} 
