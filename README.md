@@ -49,6 +49,7 @@ It supports both **PostgreSQL** and **MySQL**, and is designed to run entirely f
 **Databases**
 - PostgreSQL
 - MySQL
+- SQLite (for audit logs)
 
 **Containerization**
 - Docker & Docker Compose (multi-environment setup)
@@ -161,12 +162,7 @@ This will delete `pgdata_dev` and `pgdata_prod` volumes, wiping all data and rei
 
 # Deployment
 
-## Deploy as WAR
 
-```
-npm run build
-jar -cvf diff-db.war *
-```
 ## Deploy it in Docker
 
 
