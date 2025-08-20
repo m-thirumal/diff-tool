@@ -33,9 +33,9 @@ export default function Home() {
 
 
   return (
-   <div className="p-8 font-sans">
+   <div className="font-sans">
       <center><h1 className="text-2xl font-bold mb-6">Database Comparison Tool</h1></center>
-     <div className="mb-8 flex items-center gap-6">
+     <div className="mb-6 flex items-center gap-6">
          {/* Label on the same line */}
         <label className="font-medium" htmlFor="dbType">
           Select Database:

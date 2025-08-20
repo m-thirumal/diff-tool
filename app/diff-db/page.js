@@ -8,7 +8,6 @@ import { RotateCcw, Trash2, Plus, Edit } from "lucide-react";
 import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
 import { oneDark, oneLight } from 'react-syntax-highlighter/dist/esm/styles/prism';
 import { logAudit } from "../utils/audit"; 
-import { useRouter } from "next/navigation";
 import TopNav from "../components/TopNav"; 
 
 
@@ -35,8 +34,6 @@ export default function SelectTablePage() {
   const [selectedSQL, setSelectedSQL] = useState("");
   // Dark Mode
   const [isDarkMode, setIsDarkMode] = useState(false);
-  //router
-  const router = useRouter();
   // Previous row snapshot for audit logging
   const [selectedDiff, setSelectedDiff] = useState(null);
   // Set row count variables
@@ -420,14 +417,6 @@ return (
             onClick={fetchDiffs}
           />
         </button>
-        {/* 🔹 Audit Logs Button */}
-        <button
-          onClick={() => router.push("/audit")}
-          className="bg-indigo-600 hover:bg-indigo-900 text-white px-2 py-1 rounded shadow"
-        >
-          Audit Logs
-        </button>
-
       </div>
 
       {/* Diff column */}
