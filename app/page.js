@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 
 export default function Login() {
@@ -12,65 +12,67 @@ export default function Login() {
   const handleSubmit = async () => {
     setError("");
     const body = { name, password };
-
     const res = await fetch("/api/auth", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(body),
     });
-
     const data = await res.json();
     if (!res.ok) setError(data.error || "Something went wrong");
-    else router.push("/environment"); // navigate to environment page after login
+    else router.push("/environment");
   };
 
-return (
-  <div className="flex flex-col items-center justify-center min-h-screen bg-gray-100">
-    <div className="p-6 bg-white shadow-lg rounded-lg w-80">
-      <h2 className="text-2xl font-bold mb-6 text-center text-gray-800">Login / Register</h2>
+  useEffect(() => {
+    // dynamically load particles.js from CDN
+    const script = document.createElement("script");
+    script.src = "/js/particles.min.js";
+    script.onload = () => {
+      if (window.particlesJS) {
+        window.particlesJS.load(
+          "particles-js", // div id
+          "/particles.json", // JSON config
+          function () {
+            console.log("Particles.js config loaded");
+          }
+        );
+      }
+    };
+    document.body.appendChild(script);
+  }, []);
 
-      <div className="mb-4">
-        <label htmlFor="name" className="block text-gray-700 font-medium mb-1">
-          Name
-        </label>
+  return (
+    <div className="relative w-screen h-screen overflow-hidden">
+      {/* Particles background */}
+      <div id="particles-js" className="absolute inset-0 z-0 w-full"></div>
+
+      {/* Login Form */}
+      <div className="relative z-10 p-6 bg-white/60 shadow-lg rounded-lg w-100 h-70 mx-auto my-auto top-1/2 -translate-y-1/2">
+        <h2 className="text-2xl font-bold mb-6 text-center text-gray-800">Login / Register</h2>
+
         <input
-          id="name"
           type="text"
-          placeholder="Enter your name"
+          placeholder="Name"
           value={name}
           onChange={(e) => setName(e.target.value)}
-          className="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+          className="w-full border border-gray-800 rounded px-3 py-2 mb-4 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
         />
-      </div>
-
-      <div className="mb-4">
-        <label htmlFor="password" className="block text-gray-700 font-medium mb-1">
-          Password
-        </label>
         <input
-          id="password"
           type="password"
-          placeholder="Enter your password"
+          placeholder="Password"
           value={password}
           onChange={(e) => setPassword(e.target.value)}
-          className="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+          className="w-full border border-gray-800 rounded px-3 py-2 mb-4 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
         />
+
+        {error && <p className="text-red-600 text-sm mb-4 text-center">{error}</p>}
+
+        <button
+          onClick={handleSubmit}
+          className="w-full bg-blue-600 text-white font-medium py-2 rounded hover:bg-blue-700 transition-colors"
+        >
+          Submit
+        </button>
       </div>
-
-      {error && (
-        <p className="text-red-600 text-sm mb-4 text-center">
-          {error}
-        </p>
-      )}
-
-      <button
-        onClick={handleSubmit}
-        className="w-full bg-blue-600 text-white font-medium py-2 rounded hover:bg-blue-700 transition-colors"
-      >
-        Submit
-      </button>
     </div>
-  </div>
-);
-
+  );
 }
