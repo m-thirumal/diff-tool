@@ -24,7 +24,7 @@ export default function Register() {
     if (!res.ok) setError(data.error || "Registration failed");
     else {
       setSuccess("Registration successful! You can now login.");
-      setTimeout(() => router.push("/login"), 1500);
+      setTimeout(() => router.push("/"), 1500);
     }
   };
 

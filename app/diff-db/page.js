@@ -15,6 +15,7 @@ export default function SelectTablePage() {
   const { payload } = useDb();
   const { dbType, envA, envB } = payload;
   const [tables, setTables] = useState([]);
+  const [connectionError, setConnectionError] = useState(null);
   const [selectedTable, setSelectedTable] = useState("");
   const [loading, setLoading] = useState(true);
   // Primary Key
@@ -75,6 +76,7 @@ export default function SelectTablePage() {
         if (commonTables.length) setSelectedTable(commonTables[0]);
       } catch (err) {
         console.error("Failed to fetch tables:", err);
+        setConnectionError("Connection error: Failed to fetch tables");
       } finally {
         setLoading(false);
       }
@@ -347,7 +349,9 @@ return (
   {loading ? (
     <p>Loading tables...</p>
   ) : tables.length === 0 ? (
-    <p className="text-red-500">No common tables found.</p>
+    connectionError ? ( <p className="text-red-500">{connectionError}</p>) : (
+      <p className="text-red-500">No common tables found.</p>
+    )
   ) : (
     <>
       {/* 🔹 Filter with dropdowns and buttons */}
