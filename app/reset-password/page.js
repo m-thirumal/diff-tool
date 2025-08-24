@@ -85,21 +85,29 @@ export default function ResetPassword() {
           </>
         ) : (
           <>
-            <h2 className="text-2xl mb-4 font-bold text-gray-800">{question}</h2>
-            <input
-              type="text"
-              value={answer}
-              onChange={(e) => setAnswer(e.target.value)}
-              placeholder="Answer"
-              className="mb-3 px-3 py-2 border rounded w-full focus:outline-none focus:ring-2 focus:ring-blue-500"
-            />
-            <input
-              type="password"
-              value={newPassword}
-              onChange={(e) => setNewPassword(e.target.value)}
-              placeholder="New Password"
-              className="mb-3 px-3 py-2 border rounded w-full focus:outline-none focus:ring-2 focus:ring-blue-500"
-            />
+            <h2 className="text-2xl mb-4 font-bold text-gray-800">Enter answer for {question}</h2>
+            <div className="text-left">
+              <div className="mb-1">
+                <label className="block mb-1 font-medium text-gray-700">Answer</label>
+                <input
+                  type="text"
+                  value={answer}
+                  onChange={(e) => setAnswer(e.target.value)}
+                  placeholder="Answer"
+                  className="mb-3 px-3 py-2 border rounded w-full focus:outline-none focus:ring-2 focus:ring-blue-500"
+                />
+              </div>
+              <div className="mb-1">
+                <label className="block mb-1 font-medium text-gray-700">New Password</label>
+                <input
+                  type="password"
+                  value={newPassword}
+                  onChange={(e) => setNewPassword(e.target.value)}
+                  placeholder="New Password"
+                className="mb-3 px-3 py-2 border rounded w-full focus:outline-none focus:ring-2 focus:ring-blue-500"
+              />
+              </div>
+            </div>
             {error && <p className="text-red-600 mb-2">{error}</p>}
             <button
               onClick={resetPassword}
