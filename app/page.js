@@ -2,137 +2,96 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { useDb } from "./context/DbContext";
 
-export default function Home() {
+export default function Login() {
   const router = useRouter();
-  const { payload, setPayload } = useDb();
-  const [dbType, setDbType] = useState(payload.dbType);
-  const [envA, setEnvA] = useState(payload.envA);
-  const [envB, setEnvB] = useState(payload.envB);
+  const [name, setName] = useState("");
+  const [password, setPassword] = useState("");
+  const [error, setError] = useState("");
 
-  const handleEnvChange = (setEnv, field, value) => {
-    setEnv((prev) => ({ ...prev, [field]: value }));
+  const handleSubmit = async () => {
+    setError("");
+    const body = { name, password };
+    const res = await fetch("/api/auth", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(body),
+    });
+    const data = await res.json();
+    if (!res.ok) setError(data.error || "Something went wrong");
+    else router.push("/environment");
   };
 
-  const handleGetTables = async () => {
-    const payload = {
-      dbType,
-      envA,
-      envB,
-    };
-    setPayload(payload); // Store in context
-    router.push(`/diff-db`);
-  };
-
-  //Keep context live-updated
   useEffect(() => {
-     setPayload({ dbType, envA, envB });
-  }, [dbType, envA, envB]);
-
+    // dynamically load particles.js from CDN
+    const script = document.createElement("script");
+    script.src = "/js/particles.min.js";
+    script.onload = () => {
+      if (window.particlesJS) {
+        window.particlesJS.load(
+          "particles-js", // div id
+          "/particles.json", // JSON config
+          function () {
+            console.log("Particles.js config loaded");
+          }
+        );
+      }
+    };
+    document.body.appendChild(script);
+  }, []);
 
   return (
-   <div className="font-sans">
-      <center><h1 className="text-2xl font-bold mb-6">Database Comparison Tool</h1></center>
-     <div className="mb-6 flex items-center gap-6">
-         {/* Label on the same line */}
-        <label className="font-medium" htmlFor="dbType">
-          Select Database:
-        </label>
-         {/* Options */}
-        <div className="flex gap-6">
-          {/* PostgreSQL Option */}
-          <label className="flex items-center space-x-2 cursor-pointer">
-            <input
-              type="radio"
-              name="dbType"
-              value="PostgreSQL"
-              checked={dbType === "PostgreSQL"}
-              onChange={e => setDbType(e.target.value)}
-              className="accent-indigo-600"
-            />
-            <img
-              src="/icons/postgresql.svg"
-              alt="PostgreSQL"
-              className="w-35 h-10"
-            />
-          </label>
+    <div className="relative w-screen h-screen overflow-hidden">
+      {/* Particles background */}
+      <div id="particles-js" className="absolute inset-0 z-0 w-full"></div>
 
-          {/* MySQL Option */}
-          <label className="flex items-center space-x-2 cursor-pointer">
-            <input
-              type="radio"
-              name="dbType"
-              value="MySQL"
-              checked={dbType === "MySQL"}
-              onChange={e => setDbType(e.target.value)}
-              className="accent-indigo-600"
-            />
-            <img
-              src="/icons/mysql.svg"
-              alt="MySQL"
-              className="w-20 h-10"
-            />
-          </label>
+      {/* Login Form */}
+      <div className="relative z-10 p-6 bg-white/60 shadow-lg rounded-lg w-100 h-100 mx-auto my-auto top-1/2 -translate-y-1/2">
+        <h2 className="text-2xl font-bold mb-6 text-center text-gray-800">Login / Register</h2>
+        <div className="mb-4">
+          <label className="block mb-1 font-medium text-gray-700">Name</label>
+          <input
+            type="text"
+            placeholder="Name"
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+            className="w-full border border-gray-800 rounded px-3 py-2 mb-4 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+          />
         </div>
-      </div>
-      <hr />
-      <div className="flex flex-col md:flex-row gap-12">
-        <div  className="p-3 flex-1">
-          <h2 className="text-lg font-semibold mb-4 text-center bg-blue-200">Environment A</h2>
-          {renderEnvInputs(envA, setEnvA, "envA")}
+        <div className="mb-4">
+          <label className="block mb-1 font-medium text-gray-700">Password</label>
+          <input
+            type="password"
+            placeholder="Password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            className="w-full border border-gray-800 rounded px-3 py-2 mb-4 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+          />
         </div>
-        <div  className="p-3 flex-1">
-          <h2 className="text-lg font-semibold mb-4 text-center bg-blue-200">Environment B</h2>
-          {renderEnvInputs(envB, setEnvB, "envB")}
-        </div>
-      </div>
-      <div className="flex justify-end mt-2">
-        <button 
-          className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
-          onClick={() => {
-            console.log("Selected DB Type:", dbType);
-            console.log("Env A:", envA);
-            console.log("Env B:", envB);
-            handleGetTables();
-          }}
+
+        {error && <p className="text-red-600 text-sm mb-4 text-center">{error}</p>}
+
+        <button
+          onClick={handleSubmit}
+          className="w-full bg-blue-600 text-white font-medium py-2 rounded hover:bg-blue-700 transition-colors"
         >
-        Display Tables
+          Submit
         </button>
+        <div className="flex justify-center space-x-4 mt-4">
+          <p
+            className="text-left text-sm mt-1 text-blue-800 cursor-pointer hover:underline"
+            onClick={() => router.push("/register")}
+          >
+            New User? Register here
+          </p>
+          <p
+            className="text-righ text-sm mt-1 text-blue-800 cursor-pointer hover:underline"
+            onClick={() => router.push("/reset-password")}
+          >
+            Forgot password?
+          </p>
       </div>
-   </div>
+      </div>
+    </div>
   );
 }
-
-function renderEnvInputs(env, setEnv, prefix) {
-  const fields = [
-    { name: "name", label: "Environment Name" },
-    { name: "host", label: "Host / IP" },
-    { name: "port", label: "Port" },
-    { name: "db", label: "Database Name" },
-    { name: "user", label: "Username" },
-    { name: "password", label: "Password", type: "password" },
-  ];
-
-  return fields.map((field) => (
-    <div key={field.name} className="flex items-center mb-4">
-      <label
-        htmlFor={`${prefix}-${field.name}`}
-        className="w-40 font-medium text-gray-700"
-      >
-        {field.label}
-      </label>
-      <input
-        id={`${prefix}-${field.name}`}
-        type={field.type || "text"}
-        placeholder={field.label}
-        value={env[field.name]}
-        onChange={(e) =>
-          setEnv((prev) => ({ ...prev, [field.name]: e.target.value }))
-        }
-        className="flex-1 border border-gray-300 rounded px-3 py-1"
-      />
-    </div>
-  ));
-}
-
