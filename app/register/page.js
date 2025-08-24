@@ -7,7 +7,8 @@ export default function Register() {
   const router = useRouter();
   const [name, setName] = useState("");
   const [password, setPassword] = useState("");
-  const [question, setQuestion] = useState("");
+const [questionType, setQuestionType] = useState(""); // dropdown selection
+const [question, setQuestion] = useState("");         // actual question text
   const [answer, setAnswer] = useState("");
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
@@ -77,34 +78,42 @@ export default function Register() {
           <label className="block mb-1 font-medium text-gray-700">Question</label>
         <select
           className="w-full border rounded px-3 py-2 mb-3"
-          value={question}
-          onChange={(e) => setQuestion(e.target.value)}
+          value={questionType}
+          onChange={(e) => {
+            setQuestionType(e.target.value);
+            if (e.target.value !== "Custom") {
+              setQuestion(e.target.value); // set directly if not custom
+            } else {
+              setQuestion(""); // reset for custom
+            }
+          }}
         >
           <option value="">Select a secret question</option>
-          <option value="pet">What is your first pet’s name?</option>
-          <option value="school">What is your first school name?</option>
-          <option value="city">In which city were you born?</option>
-          <option value="custom">Custom (type below)</option>
+          <option value="What is your first pet’s name?">What is your first pet’s name?</option>
+          <option value="What is your first school name?">What is your first school name?</option>
+          <option value="In which city were you born?">In which city were you born?</option>
+          <option value="Custom">Custom (type below)</option>
         </select>
 
-        {question === "custom" && (
+        {questionType === "Custom" && (
           <input
             type="text"
             placeholder="Enter your custom question"
             className="w-full border rounded px-3 py-2 mb-3"
+            value={question}
             onChange={(e) => setQuestion(e.target.value)}
           />
         )}
-        </div>
+      </div>
         <div className="mb-1">
           <label className="block mb-1 font-medium text-gray-700">Answer</label>
-        <input
-          type="text"
-          placeholder="Answer"
-          className="w-full border rounded px-3 py-2 mb-4"
-          value={answer}
-          onChange={(e) => setAnswer(e.target.value)}
-        />
+          <input
+            type="text"
+            placeholder="Answer"
+            className="w-full border rounded px-3 py-2 mb-4"
+            value={answer}
+            onChange={(e) => setAnswer(e.target.value)}
+          />
         </div>
         {error && <p className="text-red-600 text-sm mb-2">{error}</p>}
         {success && <p className="text-green-600 text-sm mb-2">{success}</p>}

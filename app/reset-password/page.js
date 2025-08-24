@@ -85,7 +85,7 @@ export default function ResetPassword() {
           </>
         ) : (
           <>
-            <h2 className="text-2xl mb-4 font-bold text-gray-800">Enter answer for {question}</h2>
+            <h2 className="text-2xl mb-4 font-bold text-gray-800">Enter answer for: {question}</h2>
             <div className="text-left">
               <div className="mb-1">
                 <label className="block mb-1 font-medium text-gray-700">Answer</label>
