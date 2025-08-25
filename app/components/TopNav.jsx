@@ -6,6 +6,17 @@ import { Home, ArrowLeft, ClipboardList, LogOut  } from "lucide-react";
 export default function TopNav({ title }) {
   const router = useRouter();
 
+  const handleLogout = async () => {
+    try {
+      await fetch("/api/logout", {
+        method: "POST",
+      });
+      router.push("/"); // go back to login page
+    } catch (err) {
+      console.error("Logout failed:", err);
+    }
+  };
+
   return (
     <div className="sticky top-0 z-50 bg-indigo-600 dark:bg-indigo-700 px-4 py-3 flex items-center justify-between shadow-sm">      {/* Left: Title */}
       <div className="flex items-center gap-3">
@@ -40,7 +51,7 @@ export default function TopNav({ title }) {
         </button>
       {/* Logout Button */}
        <button
-          onClick={() => router.push("/")}
+          onClick={handleLogout}
           className="flex items-center gap-2 rounded-lg bg-indigo-500 text-white px-3 py-2 text-sm font-medium hover:bg-indigo-700 transition"
         >
           <LogOut size={18} />
