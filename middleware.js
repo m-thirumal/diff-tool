@@ -1,21 +1,32 @@
 // middleware.js
 import { NextResponse } from "next/server";
-import jwt from "jsonwebtoken";
+import { jwtVerify } from "jose";
 
 const JWT_SECRET =
   process.env.JWT_SECRET || "THIRUMAL_TAMIL_VENDHAN_ILAYA_VENDHAN";
+const secretKey = new TextEncoder().encode(JWT_SECRET);
 
 // Public routes (pages + apis)
 const PUBLIC_PATHS = [
   "/",
-  "/api/register",
-  "/api/reset-password",
-  "/api/auth",
-  "/api/public",
-  "/api/login",
+  "/register", "/api/register",
+  "/reset-password", "/api/reset-password",
+  "/auth", "/api/auth",
+  "/public",
 ];
 
-export function middleware(req) {
+// Verify JWT safely with jose
+async function verifyJWT(token) {
+  try {
+    const { payload } = await jwtVerify(token, secretKey);
+    return payload;
+  } catch (err) {
+    console.error("JWT verification failed:", err.message);
+    return null;
+  }
+}
+
+export async function middleware(req) {
   const { pathname } = req.nextUrl;
 
   // Skip static files (anything with an extension, like .js, .css, .png, .jpg)
@@ -37,15 +48,15 @@ export function middleware(req) {
     if (!token) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
-    try {
-      jwt.verify(token, JWT_SECRET);
-      return NextResponse.next();
-    } catch (err) {
+
+    const payload = await verifyJWT(token);
+    if (!payload) {
       return NextResponse.json(
         { error: "Invalid or expired token" },
         { status: 401 }
       );
     }
+    return NextResponse.next();
   }
 
   // 4. Protect page routes (non-public)
@@ -53,13 +64,13 @@ export function middleware(req) {
     return NextResponse.redirect(new URL("/", req.url));
   }
 
-  try {
-    jwt.verify(token, JWT_SECRET);
-    return NextResponse.next();
-  } catch (err) {
-    console.error("Invalid or expired token:", pathname, err.message);
+  const payload = await verifyJWT(token);
+  if (!payload) {
+    console.error("Invalid or expired token:", pathname);
     return NextResponse.redirect(new URL("/", req.url));
   }
+
+  return NextResponse.next();
 }
 
 export const config = {
