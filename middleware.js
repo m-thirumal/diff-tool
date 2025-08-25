@@ -19,7 +19,7 @@ const PUBLIC_PATHS = [
 async function verifyJWT(token) {
   try {
     const { payload } = await jwtVerify(token, secretKey);
-    return payload;
+    return payload;// contains claims (userId, roles, etc.)
   } catch (err) {
     console.error("JWT verification failed:", err.message);
     return null;
@@ -56,7 +56,12 @@ export async function middleware(req) {
         { status: 401 }
       );
     }
-    return NextResponse.next();
+
+    // attach claims to request headers
+    const headers = new Headers(req.headers);
+    if (payload.userId) headers.set("x-user-id", payload.userId);
+
+    return NextResponse.next({ request: { headers } });
   }
 
   // 4. Protect page routes (non-public)

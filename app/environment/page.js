@@ -11,18 +11,36 @@ export default function Home() {
   const [dbType, setDbType] = useState(payload.dbType);
   const [envA, setEnvA] = useState(payload.envA);
   const [envB, setEnvB] = useState(payload.envB);
+  const [savedEnvs, setSavedEnvs] = useState([]); // 🔹 store environments from DB
 
-  const handleEnvChange = (setEnv, field, value) => {
-    setEnv((prev) => ({ ...prev, [field]: value }));
-  };
+  // Load from DB on mount
+  useEffect(() => {
+    const loadData = async () => {
+      const res = await fetch("/api/environment");
+      const data = await res.json();
+      if (Array.isArray(data)) {
+        setSavedEnvs(data);
+      } else if (data?.dbType) {
+        // backward compatibility with old shape
+        setDbType(data.dbType);
+        setEnvA(JSON.parse(data.envA));
+        setEnvB(JSON.parse(data.envB));
+        setPayload({ dbType: data.dbType, envA: JSON.parse(data.envA), envB: JSON.parse(data.envB) });
+      }
+    };
+    loadData();
+  }, []);
 
   const handleGetTables = async () => {
-    const payload = {
-      dbType,
-      envA,
-      envB,
-    };
-    setPayload(payload); // Store in context
+    const newPayload = { dbType, envA, envB };
+    setPayload(newPayload); // Store in context
+    console.log("Payload is ", newPayload);
+    // Save to SQLite
+    await fetch("/api/environment", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(newPayload),
+    });
     router.push(`/diff-db`);
   };
 
@@ -81,10 +99,70 @@ export default function Home() {
       <div className="flex flex-col md:flex-row gap-12">
         <div  className="p-3 flex-1">
           <h2 className="text-lg font-semibold mb-4 text-center bg-blue-200">Environment A</h2>
+          {/* Dropdown for Env A */}
+          <select
+            className="w-full border border-gray-300 rounded px-3 py-1 mb-4"
+            value={envA?.name || ""}
+            onChange={(e) => {
+              const selected = savedEnvs.find(env => env.name === e.target.value);
+              if (selected) {
+                setEnvA({
+                  name: selected.name,
+                  host: selected.host,
+                  port: selected.port,
+                  db: selected.db_name,
+                  user: selected.user,
+                  password: selected.password,
+                });
+              }
+            }}
+          >
+            <option value="">-- Select Environment A --</option>
+            {savedEnvs.map((env) => (
+              <option
+                key={env.id}
+                value={env.name}
+                disabled={envB?.name === env.name} // disable if EnvB already selected
+              >
+                {env.name}
+              </option>
+            ))}
+          </select>
+
           {renderEnvInputs(envA, setEnvA, "envA")}
         </div>
         <div  className="p-3 flex-1">
           <h2 className="text-lg font-semibold mb-4 text-center bg-blue-200">Environment B</h2>
+          {/* Dropdown for Env B */}
+          <select
+            className="w-full border border-gray-300 rounded px-3 py-1 mb-4"
+            value={envB?.name || ""}
+            onChange={(e) => {
+              const selected = savedEnvs.find(env => env.name === e.target.value);
+              if (selected) {
+                setEnvB({
+                  name: selected.name,
+                  host: selected.host,
+                  port: selected.port,
+                  db: selected.db_name,
+                  user: selected.user,
+                  password: selected.password,
+                });
+              }
+            }}
+          >
+            <option value="">-- Select Environment B --</option>
+            {savedEnvs.map((env) => (
+              <option
+                key={env.id}
+                value={env.name}
+                disabled={envA?.name === env.name} // disable if EnvA already selected
+              >
+                {env.name}
+              </option>
+            ))}
+          </select>
+
           {renderEnvInputs(envB, setEnvB, "envB")}
         </div>
       </div>
