@@ -18,8 +18,11 @@ export default function Login() {
       body: JSON.stringify(body),
     });
     const data = await res.json();
-    if (!res.ok) setError(data.error || "Something went wrong");
-    else router.push("/environment");
+    if (!res.ok) {
+      setError(data.error || "Something went wrong");
+    } else {
+      setTimeout(() => router.push("/environment"), 1000);
+    }
   };
 
   useEffect(() => {
