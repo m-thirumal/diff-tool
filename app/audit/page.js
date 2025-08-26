@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import TopNav from "../components/TopNav";
+import Pagination from "../components/Pagination";
 
 export default function AuditPage() {
   const searchParams = useSearchParams();
@@ -10,34 +11,37 @@ export default function AuditPage() {
 
   const [logs, setLogs] = useState([]);
   const [totalPages, setTotalPages] = useState(1);
+  const [totalCount, setTotalCount] = useState(0);
   const [loading, setLoading] = useState(true);
 
   const page = parseInt(searchParams.get("page") || "1", 10);
+  const limit = parseInt(searchParams.get("limit") || "10", 10);
 
   useEffect(() => {
     async function fetchLogs() {
       setLoading(true);
       try {
-        const res = await fetch(`/api/audit?page=${page}`);
+        const res = await fetch(`/api/audit?page=${page}&limit=${limit}`);
         const data = await res.json();
         setLogs(data.logs);
         setTotalPages(data.totalPages);
+        setTotalCount(data.totalCount);
       } catch (err) {
         console.error("Failed to fetch logs:", err);
       }
       setLoading(false);
     }
     fetchLogs();
-  }, [page]);
+  }, [page, limit]);
 
   return (
     <div className="font-sans">
       <TopNav title="Audit Logs" />
-
+      <div className="flex flex-col h-[calc(100vh-120px)] relative"> 
       {loading ? (
         <p className="text-center p-4">Loading...</p>
       ) : (
-        <div className="overflow-x-auto">
+        <div className="flex-1 overflow-y-auto">
           <table className="min-w-full border border-gray-300 dark:border-gray-600 table-auto text-sm">
             <thead className="bg-indigo-600 text-white">
               <tr>
@@ -86,26 +90,19 @@ export default function AuditPage() {
       )}
 
       {/* Pagination */}
-      <div className="flex justify-center gap-2 mt-4">
-        {Array.from({ length: totalPages }).map((_, i) => {
-          const pageNum = i + 1;
-          return (
-            <button
-              key={pageNum}
-              onClick={() =>
-                router.push(`/audit?page=${pageNum}`, { scroll: false })
-              }
-              className={`px-3 py-1 border rounded ${
-                pageNum === page
-                  ? "bg-indigo-600 text-white"
-                  : "bg-white dark:bg-gray-800"
-              }`}
-            >
-              {pageNum}
-            </button>
-          );
-        })}
+      <div className="sticky bottom-0 bg-white border-t shadow-sm">
+        <Pagination
+          totalItems={totalCount}
+          currentPage={page}
+          onPageChange={(newPage) =>
+            router.push(`/audit?page=${newPage}&limit=${limit}`, { scroll: false })
+          }
+          onItemsPerPageChange={(newLimit) => {
+            router.push(`/audit?page=1&limit=${newLimit}`, { scroll: false });
+          }}
+        />
       </div>
+    </div>
     </div>
   );
 }
