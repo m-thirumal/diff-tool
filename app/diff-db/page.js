@@ -309,26 +309,24 @@ export default function SelectTablePage() {
           headers: {
             "Content-Type": "application/json",
           },
-          body: JSON.stringify({ dbType, ...envB, sql: modifiedSQL }),
+          body: JSON.stringify({ 
+            dbType,
+            ...envB,
+            sql: modifiedSQL,
+            tableName: selectedTable,
+            operationType: selectedDiff?.type,
+            beforeData:
+              selectedDiff?.type === "INSERT"
+                ? selectedDiff?.row
+                : selectedDiff?.oldRow || {},
+            env: envB.name,
+           }),
         });
 
         const result = await res.json();
         if (res.ok) {
           console.log("Execution result:", result.data);
           alert(`Query executed successfully. Rows affected: ${result.data.rowCount}`);
-           // ✅ centralised audit log
-          await logAudit({
-              query: modifiedSQL,
-              dbType,
-              executedBy: "Thirumal",
-              env: envB.name, // or whichever env the change applied
-              dbName: envB.db,
-              tableName: selectedTable,
-              operationType: selectedDiff?.type,
-              beforeData:  selectedDiff?.type === "INSERT" 
-                ? selectedDiff?.row 
-                : selectedDiff?.oldRow || {}
-            });
           // Refresh table diff immediately
           await fetchDiffs();
           setIsModalOpen(false);

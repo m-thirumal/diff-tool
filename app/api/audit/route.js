@@ -9,9 +9,10 @@ export async function POST(req) {
 
   await db.run(
     `INSERT INTO audit_log 
-      (db_type, env, db_name, table_name, operation_type, executed_sql, before_data, executed_by)
+      (user_id, db_type, env, db_name, table_name, operation_type, executed_sql, before_data)
       VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
     [
+      body.userId,      // user_id
       body.dbType,        
       body.env,
       body.dbName,       // 
