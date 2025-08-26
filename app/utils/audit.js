@@ -1,7 +1,7 @@
-export async function logAudit({
+export function logAudit({
+  userId,
   query,
   dbType,
-  executedBy = "Thirumal",
   env = "development",
   dbName,
   tableName = "",
@@ -9,13 +9,13 @@ export async function logAudit({
   beforeData = null,
 }) {
   try {
-    const res = await fetch("/api/audit", {
+    const res =  fetch("/api/audit", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
+        userId,
         query,
         dbType,
-        executedBy,
         env,
         dbName,
         tableName,
@@ -25,7 +25,7 @@ export async function logAudit({
     });
     console.log("Audit log response:", res);
     if (!res.ok) {
-      const err = await res.json();
+      const err = res.json();
       console.error("Audit log failed:", err.error);
     }
   } catch (err) {

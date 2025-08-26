@@ -1,27 +1,26 @@
-// app/api/audit/route.js
 import dbPromise from "@/lib/db";
 
-export async function POST(req) {
-  const body = await req.json();
-  console.log("Audit log request body:", body);
+export async function GET(req) {
+  const { searchParams } = new URL(req.url);
+  const page = parseInt(searchParams.get("page") || "1", 10);
+  const limit = parseInt(searchParams.get("limit") || "10", 10); 
+  const offset = (page - 1) * limit;
 
-  const db = await dbPromise;
+  try {
+    const db = await dbPromise;
+    const logs = await db.all(
+      `SELECT a.*, u.name AS executed_by FROM audit_log AS a LEFT JOIN users AS u ON u.id = a.user_id ORDER BY id DESC LIMIT ? OFFSET ? `,
+      [limit, offset]
+    );
 
-  await db.run(
-    `INSERT INTO audit_log 
-      (db_type, env, db_name, table_name, operation_type, executed_sql, before_data, executed_by)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
-    [
-      body.dbType,        
-      body.env,
-      body.dbName,       // 
-      body.tableName,
-      body.operationType,
-      body.query,         // executed_sql
-      JSON.stringify(body.beforeData || {}),
-      body.executedBy,
-    ]
-  );
+    const [{ count }] = await db.all(`SELECT COUNT(*) as count FROM audit_log`);
+    const totalPages = Math.ceil(count / limit);
 
-  return new Response(JSON.stringify({ success: true }), { status: 200 });
+    return Response.json({ logs, totalPages, totalCount: count, page });
+  } catch (err) {
+    console.error("Error fetching audit logs:", err);
+    return new Response(JSON.stringify({ error: "Internal Server Error" }), {
+      status: 500,
+    });
+  }
 }
