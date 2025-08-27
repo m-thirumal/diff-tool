@@ -5,11 +5,11 @@ export async function POST(req) {
   const { step, name, answer, newPassword } = await req.json();
   const db = await dbPromise;
 
-  const user = await db.get(`SELECT * FROM users WHERE name = ?`, [name]);
+  const user = await db.get(`SELECT u.*, q.question FROM users AS u LEFT JOIN secret_questions AS q ON q.id = u.secret_question_id WHERE name = ?`, [name]);
   if (!user) return new Response(JSON.stringify({ error: "User not found" }), { status: 404 });
 
   if (step === 1) {
-    return new Response(JSON.stringify({ secret_question: user.secret_question }), { status: 200 });
+    return new Response(JSON.stringify({ secret_question: user.question }), { status: 200 });
   }
 
   if (step === 2) {

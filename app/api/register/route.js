@@ -5,7 +5,7 @@ export async function POST(req) {
   const { name, password, question, answer } = await req.json();
   const db = await dbPromise;
 
-  // check if user exists (just take first one)
+  // check if user exists already
   const existing = await db.get(`SELECT * FROM users WHERE name = ?`, [name]);
 
   if (existing) {
@@ -23,10 +23,27 @@ export async function POST(req) {
   }
   const hashedPassword = await bcrypt.hash(password, 10);
   const hashedAnswer = await bcrypt.hash(answer, 10);
-  await db.run(`INSERT INTO users (name, password, secret_question, secret_answer) VALUES (?, ?, ?, ?)`, [
+  // Check if question already exists
+  let questionRow = await db.get(
+    `SELECT id FROM secret_questions WHERE question = ?`,
+    [question]
+  );
+
+  let questionId;
+  if (!questionRow) {
+    // Insert custom question
+    const result = await db.run(
+      `INSERT INTO secret_questions (question) VALUES (?)`,
+      [question]
+    );
+    questionId = result.lastID; // get inserted row ID
+  } else {
+    questionId = questionRow.id;
+  }
+  await db.run(`INSERT INTO users (name, password, secret_question_id, secret_answer) VALUES (?, ?, ?, ?)`, [
     name,
     hashedPassword,
-    question,
+    questionId,
     hashedAnswer,
   ]);
 

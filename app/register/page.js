@@ -7,11 +7,26 @@ export default function Register() {
   const router = useRouter();
   const [name, setName] = useState("");
   const [password, setPassword] = useState("");
-const [questionType, setQuestionType] = useState(""); // dropdown selection
-const [question, setQuestion] = useState("");         // actual question text
+  const [questionType, setQuestionType] = useState(""); // dropdown selection
+  const [questions, setQuestions] = useState([]); 
+  const [question, setQuestion] = useState("");         // actual question text
   const [answer, setAnswer] = useState("");
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
+
+  // fetch questions from DB
+  useEffect(() => {
+    const fetchQuestions = async () => {
+      try {
+        const res = await fetch("/api/question");
+        const data = await res.json();
+        setQuestions(Array.isArray(data) ? data : []); // always array
+      } catch (err) {
+        console.error("Failed to fetch questions:", err);
+      }
+    };
+    fetchQuestions();
+  }, []);
 
   const handleRegister = async () => {
     setError("");
@@ -89,10 +104,12 @@ const [question, setQuestion] = useState("");         // actual question text
           }}
         >
           <option value="">Select a secret question</option>
-          <option value="What is your first pet’s name?">What is your first pet’s name?</option>
-          <option value="What is your first school name?">What is your first school name?</option>
-          <option value="In which city were you born?">In which city were you born?</option>
-          <option value="Custom">Custom (type below)</option>
+            {questions.map((q) => (
+              <option key={q.id} value={q.question}>
+                {q.question}
+              </option>
+            ))}
+            <option value="Custom">Custom (type below)</option>
         </select>
 
         {questionType === "Custom" && (

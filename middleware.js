@@ -9,7 +9,7 @@ const secretKey = new TextEncoder().encode(JWT_SECRET);
 // Public routes (pages + apis)
 const PUBLIC_PATHS = [
   "/",
-  "/register", "/api/register",
+  "/register", "/api/register", "/api/question",
   "/reset-password", "/api/reset-password",
   "/auth", "/api/auth",
   "/public",
