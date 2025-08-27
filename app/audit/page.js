@@ -43,7 +43,7 @@ export default function AuditPage() {
       ) : (
         <div className="flex-1 overflow-y-auto">
           <table className="min-w-full border border-gray-300 dark:border-gray-600 table-auto text-sm">
-            <thead className="bg-indigo-600 text-white">
+            <thead className="bg-blue-400 text-white">
               <tr>
                 <th className="px-2 py-2 border">ID</th>
                 <th className="px-2 py-2 border">DB Type</th>

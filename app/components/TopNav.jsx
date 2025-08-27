@@ -18,19 +18,19 @@ export default function TopNav({ title }) {
   };
 
   return (
-    <div className="sticky top-0 z-50 bg-indigo-600 dark:bg-indigo-700 px-4 py-3 flex items-center justify-between shadow-sm">      {/* Left: Title */}
+    <div className="sticky top-0 z-50 bg-blue-600 dark:bg-blue-700 px-4 py-3 flex items-center justify-between shadow-sm">      {/* Left: Title */}
       <div className="flex items-center gap-3">
         {/* Home Button */}
         <button
           onClick={() => router.push("/environment")}
-          className="flex items-center gap-2 rounded-lg bg-indigo-500 text-white px-3 py-2 text-sm font-medium hover:bg-indigo-700 transition"        >
+          className="flex items-center gap-2 rounded-lg bg-blue-500 text-white px-3 py-2 text-sm font-medium hover:bg-blue-700 transition"        >
           <Home size={18} />
           Home
         </button>
         {/* 🔹 Audit Logs Button */}
         <button
           onClick={() => router.push("/audit")}
-            className="flex gap-2 rounded-lg bg-indigo-500 text-white px-3 py-2 text-sm font-medium hover:bg-indigo-700 transition">
+            className="flex gap-2 rounded-lg bg-blue-500 text-white px-3 py-2 text-sm font-medium hover:bg-blue-700 transition">
             <ClipboardList size={18} />
             Audit Logs
         </button>
@@ -46,13 +46,13 @@ export default function TopNav({ title }) {
         {/* Back Button */}
         <button
           onClick={() => router.back()}
-          className="flex items-center gap-2 rounded-lg bg-indigo-500 text-white px-3 py-2 text-sm font-medium hover:bg-indigo-700 transition">          <ArrowLeft size={18} />
+          className="flex items-center gap-2 rounded-lg bg-blue-500 text-white px-3 py-2 text-sm font-medium hover:bg-blue-700 transition">          <ArrowLeft size={18} />
           Back
         </button>
       {/* Logout Button */}
        <button
           onClick={handleLogout}
-          className="flex items-center gap-2 rounded-lg bg-indigo-500 text-white px-3 py-2 text-sm font-medium hover:bg-indigo-700 transition"
+          className="flex items-center gap-2 rounded-lg bg-blue-500 text-white px-3 py-2 text-sm font-medium hover:bg-blue-700 transition"
         >
           <LogOut size={18} />
           Logout

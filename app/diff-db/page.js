@@ -7,8 +7,9 @@ import Modal from "../components/Modal";
 import { RotateCcw, Trash2, Plus, Edit } from "lucide-react";
 import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
 import { oneDark, oneLight } from 'react-syntax-highlighter/dist/esm/styles/prism';
-import { logAudit } from "../utils/audit"; 
 import TopNav from "../components/TopNav"; 
+import Alert from "../components/Alert";
+import PopupAlert from "../components/PopupAlert";
 
 
 export default function SelectTablePage() {
@@ -40,6 +41,9 @@ export default function SelectTablePage() {
   // Set row count variables
   const [rowACount, setRowACount] = useState(0);  
   const [rowBCount, setRowBCount] = useState(0);
+  //Alert
+  const [alert, setAlert] = useState({ type: "", message: "" });
+
 
 
   useEffect(() => {
@@ -326,24 +330,38 @@ export default function SelectTablePage() {
         const result = await res.json();
         if (res.ok) {
           console.log("Execution result:", result.data);
-          alert(`Query executed successfully. Rows affected: ${result.data.rowCount}`);
+          //alert(`Query executed successfully. Rows affected: ${result.data.rowCount}`);
+          setAlert({ type: "success", message: `Query executed successfully. Rows affected: ${result.data.rowCount}` });
           // Refresh table diff immediately
           await fetchDiffs();
           setIsModalOpen(false);
         } else {
           console.error("Error executing query:", result.error);
-          alert(`Error: ${result.error}`);
+          //alert(`Error: ${result.error}`);
+          setAlert({ type: "error", message: `Error: ${result.error}` });
         }
     } catch (err) {
       console.error("Network error:", err);
-      alert(`Network error: ${err.message}`);
+      //alert(`Network error: ${err.message}`);
+      setAlert({ type: "error", message: `Network error: ${err.message}` });
     }
    
   };
 
+  useEffect(() => {
+    if (alert.message) {
+      const timer = setTimeout(() => setAlert({ type: "", message: "" }), 2500);
+      return () => clearTimeout(timer);
+    }
+  }, [alert]);
+
+
 return (
   <div className="font-sans">
   <TopNav title="Select Common Table" />  
+  {alert.message && (
+    <PopupAlert type={alert.type} message={alert.message} onClose={() => setAlert({ type: "", message: "" })}/>
+  )}
   {loading ? (
     <p>Loading tables...</p>
   ) : tables.length === 0 ? (
