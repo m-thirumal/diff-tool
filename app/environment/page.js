@@ -19,14 +19,45 @@ export default function Home() {
       const res = await fetch("/api/environment");
       const data = await res.json();
       if (Array.isArray(data)) {
+        // DB has environments → use them
         setSavedEnvs(data);
+        // If user already had EnvA/EnvB selected, hydrate from DB
+        if (envA?.name) {
+          const dbEnvA = data.find(env => env.name === envA.name);
+          if (dbEnvA) {
+            setEnvA({
+              name: dbEnvA.name,
+              host: dbEnvA.host,
+              port: dbEnvA.port,
+              db: dbEnvA.db_name,
+              user: dbEnvA.user,
+              password: dbEnvA.password,
+            });
+          }
+        }
+        if (envB?.name) {
+          const dbEnvB = data.find(env => env.name === envB.name);
+          if (dbEnvB) {
+            setEnvB({
+              name: dbEnvB.name,
+              host: dbEnvB.host,
+              port: dbEnvB.port,
+              db: dbEnvB.db_name,
+              user: dbEnvB.user,
+              password: dbEnvB.password,
+            });
+          }
+        }
       } else if (data?.dbType) {
         // backward compatibility with old shape
         setDbType(data.dbType);
         setEnvA(JSON.parse(data.envA));
         setEnvB(JSON.parse(data.envB));
         setPayload({ dbType: data.dbType, envA: JSON.parse(data.envA), envB: JSON.parse(data.envB) });
-      }
+      } else {
+      // No DB record → fallback to payload/env defaults
+      setPayload({ dbType, envA, envB });
+    }
     };
     loadData();
   }, []);
