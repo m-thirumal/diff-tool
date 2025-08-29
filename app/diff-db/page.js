@@ -34,6 +34,7 @@ export default function SelectTablePage() {
   // Modal
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedSQL, setSelectedSQL] = useState("");
+  const [mode, setMode] = useState("single"); // "single" | "bulk"
   // Dark Mode
   const [isDarkMode, setIsDarkMode] = useState(false);
   // Previous row snapshot for audit logging
@@ -45,7 +46,6 @@ export default function SelectTablePage() {
   const [alert, setAlert] = useState({ type: "", message: "" });
 
 
-
   useEffect(() => {
     setIsDarkMode(document.documentElement.classList.contains("dark"));
   }, []);
@@ -53,8 +53,9 @@ export default function SelectTablePage() {
   const openModal = (sql, diff) => {
     setSelectedSQL(sql);
     setIsModalOpen(true);
+    setMode("single");
     setSelectedDiff(diff); // <-- store the diff object too
-  };
+  }
 
   useEffect(() => {
     async function fetchCommonTables() {
@@ -305,7 +306,7 @@ export default function SelectTablePage() {
     return `'${String(value).replace(/'/g, "''")}'`;  
   }
 
-  const handleExecute = async (modifiedSQL) => {
+  const handleExecute = async (modifiedSQL, isBulkExecution = false) => {
     console.log("Executing SQL:", modifiedSQL);
       try {
         const res = await fetch("/api/modify-row", {
@@ -333,20 +334,26 @@ export default function SelectTablePage() {
         const result = await res.json();
         if (res.ok) {
           console.log("Execution result:", result.data);
-          //alert(`Query executed successfully. Rows affected: ${result.data.rowCount}`);
-          setAlert({ type: "success", message: `Query executed successfully. Rows affected: ${result.data.rowCount}` });
-          // Refresh table diff immediately
-          await fetchDiffs();
-          setIsModalOpen(false);
+          if (!isBulkExecution) {
+            setAlert({ type: "success", message: `Query executed successfully. Rows affected: ${result.data.rowCount}` });
+            // Refresh table diff immediately
+            await fetchDiffs();
+            setIsModalOpen(false);
+          }
+          return true; // indicate success for bulk
         } else {
           console.error("Error executing query:", result.error);
-          //alert(`Error: ${result.error}`);
-          setAlert({ type: "error", message: `Error: ${result.error}` });
+           if (!isBulkExecution) {
+            setAlert({ type: "error", message: `Error: ${result.error}` });
+           } 
+           return false; // indicate failure for bulk
         }
     } catch (err) {
       console.error("Network error:", err);
-      //alert(`Network error: ${err.message}`);
-      setAlert({ type: "error", message: `Network error: ${err.message}` });
+       if (!isBulkExecution) {
+        setAlert({ type: "error", message: `Network error: ${err.message}` });
+       }
+       return false; // indicate failure for bulk
     }
    
   };
@@ -357,6 +364,48 @@ export default function SelectTablePage() {
       return () => clearTimeout(timer);
     }
   }, [alert]);
+
+  const openBulkModal = () => {
+    console.log("Opening bulk modal");
+    const allSQL = rowDiff.map(diff => generateSQL(diff)).join("\n\n");
+    console.log("Generated SQL for bulk execution:", allSQL);
+    setSelectedSQL(allSQL);
+    setMode("bulk");
+    setIsModalOpen(true);
+  };
+
+  const handleBulkExecute = async (bulkSQL) => {
+    console.log("Bulk executing SQL:", bulkSQL);
+    const queries = bulkSQL
+      .split(";")
+      .map((q) => q.trim())
+      .filter(Boolean);
+
+    let successCount = 0;
+    let failureCount = 0;
+
+    for (const sql of queries) {
+      const ok = await handleExecute(sql, true); // no per-row alerts
+      if (ok) successCount++;
+      else failureCount++;
+    }
+
+    if (failureCount > 0) {
+      setAlert({
+        type: "error",
+        message: `Bulk execution completed with ${failureCount} failures (success: ${successCount}).`,
+      });
+    } else {
+      setAlert({
+        type: "success",
+        message: `All ${successCount} queries executed successfully.`,
+      });
+    }
+
+    await fetchDiffs();
+    setIsModalOpen(false);
+  };
+
 
 
 return (
@@ -440,6 +489,16 @@ return (
             onClick={fetchDiffs}
           />
         </button>
+        {/* 🔹 Bulk Execute Button */}
+        <button
+          type="button"
+          onClick={openBulkModal}
+          title="Bulk Execute"
+          className="flex items-center gap-1 bg-purple-600 hover:bg-purple-500 text-white px-3 py-1 rounded"
+        >
+          <span>Bulk Execute</span>
+        </button>
+
       </div>
 
       {/* Diff column */}
@@ -579,7 +638,13 @@ return (
           <Modal 
             isOpen={isModalOpen} 
             onClose={() => setIsModalOpen(false)}
-            onExecute={handleExecute}
+            onExecute={(sql) => {
+              if (mode === "bulk") {
+                handleBulkExecute(sql);
+              } else {
+                handleExecute(sql);
+              }
+            }}
             initialSQL={selectedSQL}
             >
             <h2 className="text-lg font-bold mb-4 text-gray-900 dark:text-gray-100">
@@ -589,6 +654,7 @@ return (
               {selectedSQL}
             </pre>
           </Modal>
+
         </div>
 
       )}
