@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import TopNav from "../components/TopNav";
 import Pagination from "../components/Pagination";
+import ExpandableCell from "../components/ExpandableCell";
 
 export default function AuditPage() {
   const searchParams = useSearchParams();
@@ -139,14 +140,11 @@ export default function AuditPage() {
                   <td className="px-2 py-2 border">{log.db_name}</td>
                   <td className="px-2 py-2 border">{log.table_name}</td>
                   <td className="px-2 py-2 border">{log.operation_type}</td>
-                  <td className="px-2 py-2 border max-w-[300px] truncate">
-                    {log.before_data}
+                  <td className="px-2 py-2 border">
+                     <ExpandableCell text={log.before_data} maxLength={200} />
                   </td>
-                  <td
-                    className="px-2 py-2 border max-w-[300px] truncate"
-                    title={log.executed_sql}
-                  >
-                    {log.executed_sql}
+                  <td className="px-2 py-2 border">
+                      <ExpandableCell text={log.executed_sql} maxLength={120} copyable />
                   </td>
                   <td className="px-2 py-2 border">{log.executed_by}</td>
                   <td className="px-2 py-2 border">
